@@ -3,7 +3,7 @@ export type ApiHealth = {
   service: string
   version: string
   stage: 'scaffold'
-  nansen_integration: 'not_implemented'
+  nansen_integration: 'validation_only'
 }
 
 function isApiHealth(value: unknown): value is ApiHealth {
@@ -14,7 +14,7 @@ function isApiHealth(value: unknown): value is ApiHealth {
     typeof item.service === 'string' &&
     typeof item.version === 'string' &&
     item.stage === 'scaffold' &&
-    item.nansen_integration === 'not_implemented'
+    item.nansen_integration === 'validation_only'
   )
 }
 

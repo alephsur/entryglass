@@ -1,12 +1,13 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
-.PHONY: help setup dev-api dev-web test check format up down
+.PHONY: help setup dev-api dev-web validate-provider test check format up down
 help:
 	@printf '%s\n' \
 	  'make setup    Install local dependencies and create .env safely.' \
 	  'make dev-api  Run the API; keep this terminal open.' \
 	  'make dev-web  Run the web app in a second terminal.' \
+	  'make validate-provider ARGS="..."  Dry-run or execute one bounded provider check.' \
 	  'make test     Run Python and frontend API-client tests.' \
 	  'make check    Run tests, Python lint, frontend typecheck, and build.' \
 	  'make format   Format Python source and tests.' \
@@ -21,6 +22,9 @@ dev-api:
 
 dev-web:
 	npm --prefix frontend run dev
+
+validate-provider:
+	uv run --project backend entryglass-validate-nansen $(ARGS)
 
 test:
 	uv run --project backend pytest backend/tests

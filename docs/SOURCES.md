@@ -22,6 +22,15 @@ competition terms before implementation and submission.
 - **S8 - Meridian submission form:** https://nansen-ai.typeform.com/meridian-submit
 - **S9 - API Supplemental Terms:** https://nansen.ai/legal/api
 - **S10 - Nansen Terms of Service:** https://nansen.ai/legal/terms-of-services
+- **S11 - API authentication:** https://docs.nansen.ai/getting-started/authentication
+- **S12 - Rate limits and credits:**
+  https://docs.nansen.ai/getting-started/rate-limits and
+  https://docs.nansen.ai/getting-started/credits
+- **S13 - Data coverage:** https://docs.nansen.ai/api/data-coverage
+- **S14 - Price OHLCV:** https://docs.nansen.ai/api/token-god-mode/price-ohlcv
+- **S15 - Backtesting data overview:** https://docs.nansen.ai/api/backtesting-data
+- **S16 - Address PnL and Trade Performance:**
+  https://docs.nansen.ai/api/profiler/address-pnl-and-trade-performance
 
 The campaign cutoff is September 27, 2026 at 23:59 UTC. The detailed rules require
 1,000+ calls, a public GitHub repository, an X post tagging Nansen, a 30-60 second
@@ -36,6 +45,8 @@ are recorded in [COMPETITION_AND_PERMISSIONS.md](COMPETITION_AND_PERMISSIONS.md)
 Endpoint semantics mentioned in other documents should be checked against the
 OpenAPI schema embedded in the corresponding current provider page. No undocumented
 client behavior, access entitlement, pricing, or publication permission is assumed.
+The implemented request shapes, exact cohort mapping, documented costs, and remaining
+live checks are recorded in [PROVIDER_VALIDATION.md](PROVIDER_VALIDATION.md).
 
 ## Development-tool references
 

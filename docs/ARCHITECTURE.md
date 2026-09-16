@@ -4,11 +4,13 @@
 
 Entryglass is a small monorepo with one FastAPI process and one Vue development
 server. The browser calls `/api/v1/health` through the Vite `/api` proxy. The backend
-returns process liveness and explicitly reports that Nansen integration is not
-implemented. There is no database connection or product API in this release.
+returns process liveness and explicitly reports that Nansen integration is limited
+to validation. A separate command can make one opt-in, credit-bounded provider call;
+it is not exposed over HTTP. There is no database connection or product API.
 
 ```text
 Browser -> Vue shell -> Vite /api proxy -> FastAPI health route
+Developer -> opt-in validation command -> Nansen API
 ```
 
 The only extra HTTP surfaces are FastAPI's generated API documentation. A health
@@ -35,8 +37,8 @@ HTTP routes
 | `domain/outcomes/` | Later price observations and optional accounting | Reserved |
 | `domain/patterns/` | Transparent rule matches and evaluation | Reserved |
 | `domain/preflight/` | Comparison with historical precedents | Reserved |
-| `application/` | Import, audit, replay, and preflight orchestration | Reserved |
-| `infrastructure/nansen/` | HTTP transport, provider DTOs, retries, usage ledger | Reserved |
+| `application/` | Provider-validation port; future import, audit, replay, and preflight orchestration | Validation port only |
+| `infrastructure/nansen/` | Checked request DTOs, one-call HTTP validator, redacted metadata | Validation only |
 | `infrastructure/storage/` | Evidence and analysis persistence | Reserved |
 
 Domain code must not import FastAPI, database drivers, or the HTTP client. Provider

@@ -22,7 +22,7 @@ class Settings(BaseSettings):
         "http://localhost:5173",
         "http://127.0.0.1:5173",
     )
-    # These settings are reserved; the scaffold never calls Nansen.
+    # Only the explicit validation command may use these server-side settings.
     nansen_api_key: SecretStr | None = Field(
         default=None,
         validation_alias="NANSEN_API_KEY",

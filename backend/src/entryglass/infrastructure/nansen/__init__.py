@@ -1,1 +1,1 @@
-"""Reserved for the Nansen adapter. No external requests are implemented."""
+"""Opt-in Nansen contract-validation adapter; ordinary app paths stay offline."""

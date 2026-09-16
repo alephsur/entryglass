@@ -16,7 +16,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         version=__version__,
         description=(
             "Initial scaffold only. Historical audits, replay, patterns, and preflight "
-            "are planned, not implemented. No external data is queried."
+            "are planned, not implemented. HTTP requests do not query external data; "
+            "provider validation is a separate opt-in command."
         ),
     )
     application.state.settings = config

@@ -13,7 +13,7 @@ def test_health_is_explicit_about_unimplemented_features(client: TestClient) -> 
         "service": "Entryglass API",
         "version": __version__,
         "stage": "scaffold",
-        "nansen_integration": "not_implemented",
+        "nansen_integration": "validation_only",
     }
 
 

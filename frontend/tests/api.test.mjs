@@ -7,7 +7,7 @@ const health = {
   service: 'Entryglass API',
   version: '0.1.0',
   stage: 'scaffold',
-  nansen_integration: 'not_implemented',
+  nansen_integration: 'validation_only',
 }
 
 afterEach(() => { mock.restoreAll() })

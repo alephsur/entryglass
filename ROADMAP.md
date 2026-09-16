@@ -1,8 +1,10 @@
 # Entryglass Roadmap
 
 **Baseline:** 2026-09-15  
-**Current state:** Initial scaffold with EG-001 and EG-002 complete  
-**Next task:** Validate provider access and schemas, then run the EG-003 data-validation gate  
+**Current state:** Scaffold plus offline provider validator; live access remains unverified
+
+**Next task:** Configure authorized inputs, validate live provider responses, then run EG-003
+
 **Delivery approach:** One developer, one chain, one complete user journey
 
 This is an implementation plan, not a claim that features already exist. Checked
@@ -68,9 +70,9 @@ be fixed before interpreting any provider results. See `docs/VERIFICATION.md`.
       form, repository requirements, video constraints, and provider permissions.
 - [ ] Confirm account access, API pricing, quotas, exact route versions, schemas,
       filters, pagination, null behavior, and time resolution from live responses.
-- [ ] Define the exact segment mapping. Do not assume `smart_money`, `Smart Trader`,
+- [x] Define the exact segment mapping. Do not assume `smart_money`, `Smart Trader`,
       and every legacy label are interchangeable.
-- [ ] Add a small server-side provider interface and an opt-in validation command.
+- [x] Add a small server-side provider interface and an opt-in validation command.
       Never call paid endpoints at startup or in the ordinary test suite.
 - [ ] **EG-003:** Validate at least three real historical entries, including an
       uninformative or contrary case, not only a striking loss.
@@ -234,8 +236,9 @@ structured evidence, but must not create evidence or decide the verdict.
 
 ## 7. First implementation handoff
 
-**EG-001 and EG-002 are complete.** Validate authenticated access, schemas, and the
-segment mapping next, then implement **EG-003** as the first product slice:
+**EG-001 and EG-002 are complete, and the public provider contracts plus exact
+segment mapping are implemented offline.** Validate authenticated access and observed
+response behavior next, then implement **EG-003** as the first product slice:
 
 > Given an authorized public example wallet and a declared history window, import
 > one genuine normalized entry, retrieve bounded pre-entry evidence, and save a

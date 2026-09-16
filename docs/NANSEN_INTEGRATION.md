@@ -1,9 +1,9 @@
 # Nansen Integration Plan
 
-**Status: not implemented. No authenticated requests have been executed for this scaffold.**
+**Status: validation adapter implemented. No authenticated requests have been executed.**
 
-This file records the planned integration boundary. The first implementation task
-is a budgeted, opt-in schema and data-quality spike, not a full audit engine.
+This file records the integration boundary. A budgeted, opt-in schema validator is
+implemented; the next step is a live data-quality spike, not a full audit engine.
 
 ## Candidate sources
 
@@ -13,18 +13,30 @@ is a budgeted, opt-in schema and data-quality spike, not a full audit engine.
 | Historical flow context | Historical Token Flow Summary [S2] | Bounded pre-entry aggregate context |
 | Historical trade evidence | Historical Token Who Bought/Sold [S4] | Confirm sampled or aggregate buy/sell observations |
 | Current flow context | Flow Intelligence [S5] | Preflight features with compatible definitions |
-| Later prices | Locate and verify current OHLCV documentation during EG-002 | Separate outcome observations |
-| Optional PnL | Locate and verify current profiler PnL documentation during EG-002 | Supplementary token-level accounting only |
+| Later prices | Price OHLCV [S14] | Candidate for separate outcome observations; live behavior still unverified |
+| Optional PnL | Address PnL and Trade Performance [S16] | Supplementary token-level accounting only; never per-entry realized PnL |
 
 The inspected schemas use `POST /api/v1/profiler/dex-trades` for wallet trades and
 `POST /api/v1beta1/tgm/historical-token-flow-summary` for the beta historical summary.
 They do not share a universal route prefix. The wallet endpoint uses a `date`
-request field; the historical summary uses `date_range`. Both must be validated
-from current provider schemas before a client is written. [S2, S3]
+request field; the historical summary uses `date_range`. Their public schemas are
+represented by the validation adapter, but access and response behavior still need
+confirmation with bounded live requests. [S2, S3]
 
-`NANSEN_BASE_URL` is the server origin only. Keep versioned paths in explicit adapter
-methods. Do not concatenate all endpoints beneath `/api/v1` by assumption. Keep API
-keys server-side; the inspected schemas specify an `apikey` request header. [S2, S3]
+The documented later-price candidate is `POST /api/v1/tgm/token-ohlcv`. Current
+candles can be incomplete, omitted tokens and tokens without data have distinct
+meanings, and capped results can be truncated; these semantics must be verified and
+kept out of the pre-entry path before the endpoint becomes a domain dependency.
+[S14]
+
+The documented profiler PnL routes are supplementary wallet/token summaries. They
+do not establish realized PnL for an individual entry without a separately defined
+and tested lot-accounting method. [S16]
+
+`NANSEN_BASE_URL` is the server origin only. Versioned paths are kept in explicit
+adapter contracts; they are not concatenated beneath `/api/v1` by assumption. API
+keys remain server-side; the inspected schemas specify an `apikey` request header.
+[S2, S3]
 
 ## Validation checklist
 
@@ -33,10 +45,11 @@ direction semantics, segment membership, supported precision, pagination, respon
 warnings, credit charging, and freshness with actual responses. Preserve and
 inspect contrary cases. A documented capability is not yet a proven project path.
 
-Define provider DTOs separately from domain objects. Add fixture-based contract
-tests, bounded retries, rate-limit handling, cancellation, and a configured budget.
-Never retry invalid credentials or schema errors indefinitely. The normal test
-suite must use no credentials and incur no charges.
+Provider request DTOs are separate from domain objects, and synthetic contract tests
+run offline. The validation command has a configured one-request credit ceiling and
+no retries. Bounded retries, `Retry-After` handling, cancellation, and a persistent
+usage ledger remain later ingestion work. Never retry invalid credentials or schema
+errors indefinitely. The normal test suite uses no credentials and incurs no charges.
 
 ## Evidence envelope to design
 

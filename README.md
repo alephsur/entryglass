@@ -8,9 +8,10 @@ The name combines an entry with a lens for examining it. It is a working project
 name, not a claim of trademark or domain availability.
 
 > **Release 0.1.0 is an initial scaffold, not the product.**
-> Only the API health endpoint and a development landing screen are implemented.
-> No wallet audit, Nansen request, historical calculation, pattern engine, database,
-> trading operation, or simulated investment result is implemented.
+> Only the API health endpoint, a development landing screen, and an opt-in provider
+> contract-validation command are implemented. No wallet audit, historical
+> calculation, pattern engine, database, trading operation, or simulated investment
+> result is implemented. No authenticated provider request has been run yet.
 
 ## Start here
 
@@ -18,7 +19,8 @@ Read [ROADMAP.md](ROADMAP.md) for the implementation sequence and acceptance cri
 Read [docs/VERIFICATION.md](docs/VERIFICATION.md) for exactly what was tested when
 this archive was prepared and during local verification. Read
 [docs/COMPETITION_AND_PERMISSIONS.md](docs/COMPETITION_AND_PERMISSIONS.md) before
-using or publishing provider data.
+using or publishing provider data. The checked provider contracts and safe validation
+workflow are in [docs/PROVIDER_VALIDATION.md](docs/PROVIDER_VALIDATION.md).
 
 All authored documentation, source comments, and interface copy are in English.
 
@@ -26,10 +28,10 @@ All authored documentation, source comments, and interface copy are in English.
 
 | Area | Current contents |
 | --- | --- |
-| Backend | FastAPI app factory, typed settings, health route, CORS, 10 tests |
+| Backend | FastAPI app factory, typed settings, health route, CORS, provider-validation contracts |
 | Frontend | Vue 3 + TypeScript + Vite shell, local API status, 6 HTTP-client tests |
 | Domain | Reserved namespaces for trades, context, outcomes, patterns, and preflight |
-| Infrastructure | Reserved Nansen and SQLite adapter directories; no adapters yet |
+| Infrastructure | Opt-in Nansen contract validator; SQLite remains reserved |
 | Development | Locked local setup, Make commands, safe setup script, development Docker configuration |
 | Quality | pytest, Ruff configuration, TypeScript checks, Node test runner, CI workflow |
 | Planning | Roadmap, architecture, methodology, integration notes, agent instructions |
@@ -121,6 +123,11 @@ To format Python files:
 make format
 ```
 
+The provider validator is offline by default and prints a redacted request plan.
+Live execution additionally requires `--execute`, an explicit credit ceiling, a
+server-side key, and owner-approved public inputs. See
+[docs/PROVIDER_VALIDATION.md](docs/PROVIDER_VALIDATION.md).
+
 ## Dependency reproducibility
 
 `backend/uv.lock` and `frontend/package-lock.json` are present. On September 16,
@@ -157,8 +164,10 @@ entryglass/
     tests/
   docs/
     ARCHITECTURE.md
+    COMPETITION_AND_PERMISSIONS.md
     METHODOLOGY.md
     NANSEN_INTEGRATION.md
+    PROVIDER_VALIDATION.md
     SOURCES.md
     VERIFICATION.md
   scripts/setup.sh
@@ -172,9 +181,9 @@ reserved modules from implemented code.
 
 ## Configuration and privacy
 
-Copy `.env.example` to `.env` at the repository root. `NANSEN_API_KEY` is reserved
-for the future backend adapter and currently unused. Never put it in `frontend/`,
-a `VITE_` environment variable, logs, screenshots, or the public repository.
+Copy `.env.example` to `.env` at the repository root. `NANSEN_API_KEY` is used only
+by explicit backend validation commands. Never put it in `frontend/`, a `VITE_`
+environment variable, logs, screenshots, or the public repository.
 The frontend container does not receive the backend `.env` file.
 
 `data/` and `artifacts/` are private local workspaces, excluded from Git except for
@@ -189,6 +198,8 @@ coverage and missing-data states rather than inventing a reassuring score.
 See [docs/METHODOLOGY.md](docs/METHODOLOGY.md).
 
 Do not represent this scaffold as an investment recommendation service or an
-operational contest submission. Before publishing, verify provider permissions,
-select a repository license, and check the current competition terms. No license
-has been selected on the owner's behalf.
+operational contest submission. Public-source review did not establish redistribution
+permission for the planned historical endpoints, so written provider clarification
+is still required before publishing their outputs. Also select a repository license
+and recheck the current competition terms. No license has been selected on the
+owner's behalf.

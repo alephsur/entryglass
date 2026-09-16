@@ -1,1 +1,1 @@
-"""Reserved for external provider and persistence adapters."""
+"""External adapters; persistence remains reserved for a later milestone."""

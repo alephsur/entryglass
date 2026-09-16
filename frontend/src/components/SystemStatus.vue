@@ -47,6 +47,6 @@ onMounted(() => { void refresh() })
     <button class="button" type="button" :disabled="busy" @click="refresh">
       {{ busy ? 'Checking...' : 'Check API connection' }}
     </button>
-    <p class="panel-note">Data integration: not implemented. No API key required.</p>
+    <p class="panel-note">Data integration: validation only. No API key required for this screen.</p>
   </section>
 </template>

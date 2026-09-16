@@ -2,7 +2,7 @@
 
 **Prepared:** September 15, 2026  
 **Updated:** September 16, 2026  
-**Scope:** Entryglass 0.1.0 initial structure only
+**Scope:** Entryglass 0.1.0 scaffold and offline provider-contract validator
 
 This report separates executed checks from unverified product behavior. It certifies
 the EG-001 local scaffold workflow on the machine used for the update, not a live
@@ -30,6 +30,24 @@ wallet analysis in either state.
 
 No Nansen request was made, no credential was required, and no API credit was used.
 
+## M1 offline provider-validator checks executed successfully
+
+The September 16 follow-up added checked public request contracts for wallet DEX
+trades, historical token flow, and historical who-bought/sold. The ordinary suite
+now contains 24 backend tests and 6 frontend tests. It verifies UTC window rules,
+exact Smart Trader label mapping, redacted metadata, safe provider errors, dry-run
+behavior, the explicit execution and credit gates, and the missing-key failure path.
+
+The full `make check` passed after these changes: all 24 backend and 6 frontend tests,
+Ruff lint and formatting for 33 Python files, Vue/TypeScript type checking, and the
+Vite production build. A dry run printed a redacted one-request plan. Attempting
+execution without a local `NANSEN_API_KEY` stopped before networking with a clear
+configuration error. No provider call was sent and no credit was consumed.
+
+The health contract and UI now describe Nansen integration as `validation_only`.
+This means a separate developer command exists; the browser still does not query
+Nansen or expose an analysis feature.
+
 ## Environment used for EG-001
 
 - Host Python 3.14.4; the locked backend environment used Python 3.12.13
@@ -49,9 +67,11 @@ contract, but dependency updates should recheck them.
 - A clean Git checkout or GitHub Actions execution. This extracted workspace has no
   `.git` metadata, so the presence of the lockfiles is verified but their commit
   status cannot be checked here.
-- Authenticated Nansen endpoint schemas, credentials, budgets, and live data
-  coverage. EG-002 reviewed the public permission rules, but publication of the
-  planned historical outputs still needs written provider clarification.
+- Authenticated Nansen access, observed response schemas, charged credits, and live
+  data coverage. Public schemas, documented costs, and the exact cohort mapping are
+  checked, but they are not substitutes for bounded live validation. EG-002 reviewed
+  the public permission rules; publication of planned historical outputs still needs
+  written provider clarification.
 - Any audit, replay, pattern engine, preflight result, database, or trading behavior;
   these features remain deliberately unimplemented.
 
