@@ -1,0 +1,43 @@
+SHELL := /bin/bash
+.DEFAULT_GOAL := help
+
+.PHONY: help setup dev-api dev-web test check format up down
+help:
+	@printf '%s\n' \
+	  'make setup    Install local dependencies and create .env safely.' \
+	  'make dev-api  Run the API; keep this terminal open.' \
+	  'make dev-web  Run the web app in a second terminal.' \
+	  'make test     Run Python and frontend API-client tests.' \
+	  'make check    Run tests, Python lint, frontend typecheck, and build.' \
+	  'make format   Format Python source and tests.' \
+	  'make up       Start the Docker development environment.' \
+	  'make down     Stop the Docker development environment.'
+
+setup:
+	bash scripts/setup.sh
+
+dev-api:
+	uv run --project backend uvicorn entryglass.main:app --reload --host 127.0.0.1 --port 8000
+
+dev-web:
+	npm --prefix frontend run dev
+
+test:
+	uv run --project backend pytest backend/tests
+	npm --prefix frontend test
+
+check: test
+	uv run --project backend ruff check backend
+	uv run --project backend ruff format --check backend
+	npm --prefix frontend run typecheck
+	npm --prefix frontend run build
+
+format:
+	uv run --project backend ruff format backend
+
+up:
+	@test -f .env || cp .env.example .env
+	docker compose up --build
+
+down:
+	docker compose down

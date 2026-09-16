@@ -1,0 +1,42 @@
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# JavaScript and builds
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Private data and local artifacts
+data/*
+!data/README.md
+artifacts/*
+!artifacts/README.md
+*.sqlite
+*.sqlite3
+*.db
+*.log
+
+# Editor and operating-system files
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+
+# Keep dependency lockfiles under version control once generated.
