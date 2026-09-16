@@ -32,9 +32,9 @@ HTTP routes
 | --- | --- | --- |
 | `api/` | HTTP contracts and request/response mapping | Health only |
 | `core/` | Typed server configuration | Implemented |
-| `domain/trades/` | Economic entries, normalization, coverage | Reserved |
-| `domain/context/` | Bounded pre-entry observations | Reserved |
-| `domain/outcomes/` | Later price observations and optional accounting | Reserved |
+| `domain/trades/` | Economic entry contract; routing normalization and coverage | Entry contract only |
+| `domain/context/` | Strict pre-entry windows and nullable observations | Contracts implemented |
+| `domain/outcomes/` | Later price observations, explicitly not realized PnL | Contracts implemented |
 | `domain/patterns/` | Transparent rule matches and evaluation | Reserved |
 | `domain/preflight/` | Comparison with historical precedents | Reserved |
 | `application/` | Provider-validation port; future import, audit, replay, and preflight orchestration | Validation port only |

@@ -1,9 +1,9 @@
 # Entryglass Roadmap
 
 **Baseline:** 2026-09-15  
-**Current state:** Scaffold plus offline provider validator; live access remains unverified
+**Current state:** M1 live feasibility and EG-003 completed with explicit data limitations
 
-**Next task:** Configure authorized inputs, validate live provider responses, then run EG-003
+**Next task:** Begin M2 normalized ingestion and private evidence persistence
 
 **Delivery approach:** One developer, one chain, one complete user journey
 
@@ -68,19 +68,22 @@ be fixed before interpreting any provider results. See `docs/VERIFICATION.md`.
 
 - [x] **EG-002:** Verify the current competition cutoff, eligibility, submission
       form, repository requirements, video constraints, and provider permissions.
-- [ ] Confirm account access, API pricing, quotas, exact route versions, schemas,
-      filters, pagination, null behavior, and time resolution from live responses.
+- [x] Confirm account access, live credit headers, exact route versions, request
+      filters, pagination envelopes, null behavior, trade timestamp precision, and
+      OHLCV resolution from bounded live responses.
+- [ ] Observe a non-empty historical who-bought/sold row and verify its row field
+      types. The authorized sample returned a valid empty page.
 - [x] Define the exact segment mapping. Do not assume `smart_money`, `Smart Trader`,
       and every legacy label are interchangeable.
 - [x] Add a small server-side provider interface and an opt-in validation command.
       Never call paid endpoints at startup or in the ordinary test suite.
-- [ ] **EG-003:** Validate at least three real historical entries, including an
+- [x] **EG-003:** Validate at least three real historical entries, including an
       uninformative or contrary case, not only a striking loss.
-- [ ] For each, retrieve the entry, pre-entry context, and available later prices.
+- [x] For each, retrieve the entry, pre-entry context, and available later prices.
       Confirm any selling claim using actual buy/sell evidence or remove the claim.
-- [ ] Record latency, credits, request IDs, parameters, data availability, and
+- [x] Record latency, credits, request IDs, parameters, data availability, and
       timestamp limitations privately in `data/`.
-- [ ] Create hand-authored synthetic contract fixtures; do not publish raw private
+- [x] Create hand-authored synthetic contract fixtures; do not publish raw private
       responses or restricted labeled-wallet lists.
 
 **Go/no-go gate:** Continue only if a reviewer can inspect a real entry, understand
@@ -236,14 +239,16 @@ structured evidence, but must not create evidence or decide the verdict.
 
 ## 7. First implementation handoff
 
-**EG-001 and EG-002 are complete, and the public provider contracts plus exact
-segment mapping are implemented offline.** Validate authenticated access and observed
-response behavior next, then implement **EG-003** as the first product slice:
+**EG-001, EG-002, and EG-003 are complete.** The validated sample required expanding
+beyond the planned 90-day scope: the authorized wallet contained no entries in 90
+days, two in one year, and three across documented Solana coverage. All three
+pre-entry contexts had observed zero Smart Trader net flow, unavailable average flow,
+and mixed 24-hour/7-day price directions. Treat this as a limited replay sample, not
+evidence of a predictive pattern. Begin M2 with the validated contracts:
 
-> Given an authorized public example wallet and a declared history window, import
-> one genuine normalized entry, retrieve bounded pre-entry evidence, and save a
-> private evidence record. Prove the temporal cutoff in tests. Do not build scoring,
-> claims about selling, or a pattern engine until this is validated.
+> Normalize the validated entry, context, and outcome contracts behind an ingestion
+> use case; add private persistence, explicit coverage states, deduplication, and a
+> request budget. Do not build scoring, claims about selling, or a pattern engine.
 
 [S1]: https://nansen.ai/campaigns/meridian-buildathon
 [S7]: https://release.nansen.ai/help/articles/3540155-nansen-meridian-buildathon-sep-14-27

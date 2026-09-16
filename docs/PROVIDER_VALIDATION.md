@@ -2,15 +2,15 @@
 
 **Checked:** September 16, 2026
 
-**Status:** Public schemas implemented; authenticated validation blocked until a
-local API key and an authorized public example wallet are provided
+**Status:** Public schemas implemented and bounded authenticated EG-003 validation
+completed with an authorized public example wallet
 
 **Ordinary tests:** Offline; zero provider calls and zero credits
 
 This document records the current public contract and the narrow validation tool.
-It is not evidence that the configured account can access these endpoints. Only a
-successful opt-in response can establish account access, observed null behavior,
-actual response fields, and charged credits.
+The private EG-003 spike established account access and observed behavior for the
+bounded calls described below. It does not establish general availability, future
+schema stability, or publication permission.
 
 ## Authentication, limits, and cost
 
@@ -117,17 +117,33 @@ pagination state, warning count, safe headers, and hashes of the request and raw
 response. It never prints the API key or provider row values. Redirect live metadata
 to an ignored file under `data/`; do not commit real wallet evidence.
 
-## Live validation still required
+## EG-003 live validation result
 
-With a configured key and an owner-approved public wallet, verify and record:
+The authorized wallet had no qualifying entries in 90 days, two in one year, and
+three only after discovery expanded to the documented Solana coverage boundary.
+All three qualifying entries were included; none was selected using its later
+outcome. Private evidence under ignored `data/` records request IDs, latency, hashes,
+parameters, warnings, pagination, credit use, and provider values.
 
-1. Account tier and access to all three routes.
-2. Actual quoted and charged credits for one bounded request per route.
-3. Returned field names, pagination behavior, warnings, and null behavior.
-4. Effective timestamp precision and behavior at a strict pre-entry boundary.
-5. Request IDs, latency, rate-limit headers, and remaining credits.
+- Wallet trades, historical flow, historical who-bought/sold, and Price OHLCV all
+  returned HTTP 200.
+- Live costs were 1 credit for each wallet-trade and OHLCV request and 5 credits for
+  each beta historical request. The bounded spike used 27 credits in total.
+- Wallet trades returned whole-second UTC timestamps. Context queries ended one
+  second before each entry because provider ranges are inclusive.
+- Each historical flow response contained one row. Smart Trader net flow and wallet
+  count were observed, while `smart_trader_avg_flow_usd` was null in all three.
+- One exact-label `Smart Trader` who-bought request returned a valid empty, final
+  page. This validates empty-page behavior but not non-empty row field types.
+- Each OHLCV request returned 1-hour candles covering both outcome horizons without
+  truncation. The result uses the first candle beginning at or after the horizon.
+- The three contexts had observed zero Smart Trader net flow. Price direction was
+  mixed between 24 hours and 7 days, providing contrary cases rather than a single
+  retrospective story.
 
-Do not mark the live-access roadmap item complete from public documentation alone.
+Later prices remain reference-price observations, not realized PnL. No historical
+cohort selling claim was made. The real responses stay private and the repository
+contains only clearly labeled, hand-authored synthetic fixtures.
 
 ## Sources
 
@@ -138,4 +154,5 @@ Do not mark the live-access roadmap item complete from public documentation alon
 - [Address DEX Trades](https://docs.nansen.ai/api/profiler/address-dex-trades)
 - [Historical Token Flow Summary](https://docs.nansen.ai/api/backtesting-data/historical-token-flow-summary)
 - [Historical Token Who Bought/Sold](https://docs.nansen.ai/api/backtesting-data/historical-token-who-bought-sold)
+- [Price OHLCV](https://docs.nansen.ai/api/token-god-mode/price-ohlcv)
 - [Data methodology](https://docs.nansen.ai/guides/data-methodology-and-technical-reference)

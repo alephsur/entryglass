@@ -1,9 +1,10 @@
 # Nansen Integration Plan
 
-**Status: validation adapter implemented. No authenticated requests have been executed.**
+**Status: bounded authenticated EG-003 validation completed; product ingestion is not implemented.**
 
 This file records the integration boundary. A budgeted, opt-in schema validator is
-implemented; the next step is a live data-quality spike, not a full audit engine.
+implemented and a private live data-quality spike has completed. The next step is
+normalized ingestion and evidence persistence, not a full audit engine.
 
 ## Candidate sources
 

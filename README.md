@@ -11,7 +11,8 @@ name, not a claim of trademark or domain availability.
 > Only the API health endpoint, a development landing screen, and an opt-in provider
 > contract-validation command are implemented. No wallet audit, historical
 > calculation, pattern engine, database, trading operation, or simulated investment
-> result is implemented. No authenticated provider request has been run yet.
+> result is implemented. A private, bounded EG-003 validation spike has been run;
+> its evidence is not part of the repository or exposed by the application.
 
 ## Start here
 
@@ -30,7 +31,7 @@ All authored documentation, source comments, and interface copy are in English.
 | --- | --- |
 | Backend | FastAPI app factory, typed settings, health route, CORS, provider-validation contracts |
 | Frontend | Vue 3 + TypeScript + Vite shell, local API status, 6 HTTP-client tests |
-| Domain | Reserved namespaces for trades, context, outcomes, patterns, and preflight |
+| Domain | Validated entry, pre-entry window, and outcome contracts; patterns and preflight remain reserved |
 | Infrastructure | Opt-in Nansen contract validator; SQLite remains reserved |
 | Development | Locked local setup, Make commands, safe setup script, development Docker configuration |
 | Quality | pytest, Ruff configuration, TypeScript checks, Node test runner, CI workflow |

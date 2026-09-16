@@ -4,9 +4,9 @@
 **Updated:** September 16, 2026  
 **Scope:** Entryglass 0.1.0 scaffold and offline provider-contract validator
 
-This report separates executed checks from unverified product behavior. It certifies
-the EG-001 local scaffold workflow on the machine used for the update, not a live
-Nansen integration or any planned analytics feature.
+This report separates executed checks from unverified product behavior. It records
+the EG-001 local scaffold workflow, the offline validator, and the bounded private
+EG-003 feasibility spike. It does not certify a provider-backed product feature.
 
 ## EG-001 checks executed successfully
 
@@ -48,6 +48,35 @@ The health contract and UI now describe Nansen integration as `validation_only`.
 This means a separate developer command exists; the browser still does not query
 Nansen or expose an analysis feature.
 
+## EG-003 private live validation
+
+The authorized Solana wallet required expanding discovery beyond the planned 90-day
+window to obtain three genuine quote-asset-to-token entries. All three were retained
+without selecting on outcome. Each received a strictly pre-entry 24-hour historical
+flow query ending one second before the trade and separate 1-hour OHLCV observations
+for the 24-hour and 7-day horizons.
+
+The live calls used 27 credits in total and left 62 available at the end of the
+spike. All requested routes returned HTTP 200. Provider rows, wallet history, token
+addresses, transaction hashes, request IDs, and measurements remain under ignored
+`data/eg003/` with private file permissions. Only aggregate validation facts appear
+in tracked documentation.
+
+All three samples had observed zero Smart Trader net flow, a null Smart Trader
+average-flow field, and mixed later price directions. One flow response included a
+provider warning. The exact-label who-bought/sold check returned a valid empty page.
+These are distinct states and are not converted into a positive or negative signal.
+
+Pure domain tests now enforce the strict cutoff, Decimal entry prices, null versus
+observed-zero context, pending versus missing outcomes, and the separation of later
+price change from realized PnL. Hand-authored synthetic fixtures cover the observed
+wallet-trade, historical-flow, and OHLCV envelope shapes.
+
+After the EG-003 contracts were added, the full `make check` passed with 33 backend
+tests, 6 frontend tests, Ruff lint and formatting for 38 Python files, Vue/TypeScript
+type checking, and the Vite production build. The two previously noted dependency
+deprecation warnings remain non-failing.
+
 ## Environment used for EG-001
 
 - Host Python 3.14.4; the locked backend environment used Python 3.12.13
@@ -67,11 +96,10 @@ contract, but dependency updates should recheck them.
 - A clean Git checkout or GitHub Actions execution. This extracted workspace has no
   `.git` metadata, so the presence of the lockfiles is verified but their commit
   status cannot be checked here.
-- Authenticated Nansen access, observed response schemas, charged credits, and live
-  data coverage. Public schemas, documented costs, and the exact cohort mapping are
-  checked, but they are not substitutes for bounded live validation. EG-002 reviewed
-  the public permission rules; publication of planned historical outputs still needs
-  written provider clarification.
+- A non-empty historical who-bought/sold row and its live field types. The checked
+  request returned an empty final page. Wider provider access and coverage remain
+  unproven beyond the bounded sample. Publication of planned historical outputs
+  still needs written provider clarification.
 - Any audit, replay, pattern engine, preflight result, database, or trading behavior;
   these features remain deliberately unimplemented.
 

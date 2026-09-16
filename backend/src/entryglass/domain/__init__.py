@@ -1,1 +1,1 @@
-"""Reserved home for pure domain rules. No analysis is implemented yet."""
+"""Pure validated domain contracts; analysis rules remain unimplemented."""
