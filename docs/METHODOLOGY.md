@@ -91,7 +91,7 @@ validated structured facts.
 
 Source references resolve in [SOURCES.md](SOURCES.md).
 
-## 9. Implemented M3/M4 boundary
+## 9. Implemented M3-M5 boundary
 
 The review pipeline ends the historical-flow query one second before the entry,
 stores its values and coverage in `HistoricalContext`, and runs OHLCV retrieval only
@@ -99,3 +99,29 @@ after that object exists. The browser receives no later price values from the re
 endpoint; it must call the separate outcome endpoint after an explicit reveal action.
 This presentation boundary complements, but does not replace, the tested temporal
 separation in the application and domain layers.
+
+M5 predeclares `smart-trader-flow-v1` before inspecting the current candidate. For
+observed historical or current context, positive net flow is **net inflow**, negative
+net flow is **net outflow**, zero flow with zero observed wallets is **no observed
+flow**, and zero flow with positive wallet activity is **active, net flat**. Missing
+net flow, missing wallet count, or unavailable coverage remains **unavailable** and
+cannot match one of the four observed groups.
+
+Later reference-price changes are grouped only for display: above +2% is gain, below
+-2% is decline, and the inclusive interval between them is flat. Missing or
+unfinished outcomes remain unavailable. The threshold is fixed and versioned; it is
+not learned from the reviewed wallet.
+
+The personal-precedent report is explicitly `descriptive_only` and shows every rule,
+sample counts, unavailable counts, individual observations, and the same-wallet
+outcome baseline. No held-out predictive evaluation is claimed, so overlapping
+horizons are disclosed rather than presented as independent validation. Any future
+predictive claim would require a separate chronological, overlap-purged evaluation.
+
+Current comparison uses only Smart Trader net-flow direction and observed wallet
+activity. The current provider window is rolling `1d`, while history uses an explicit
+24-hour UTC interval; the result exposes this difference. Average flow is shown when
+available but excluded from the matching rule. Freshness is based on Entryglass
+retrieval age, not a claim about the provider's source-event time; the provider may
+cache the one-day response for 10 to 30 minutes. A match remains a descriptive
+precedent, never a probability, recommendation, or risk score.

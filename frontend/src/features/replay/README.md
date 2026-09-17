@@ -1,7 +1,6 @@
 # Historical Replay
 
-Reserved feature directory. Not implemented.
-
-Planned responsibility: Pre-entry evidence, a separate outcome reveal, and the evidence drawer.
-
-Follow the root ROADMAP.md; do not populate this directory with fake results.
+Implemented in the main local journey: strictly pre-entry historical flow, later
+prices hidden until an explicit reveal, and an evidence drawer with source, period,
+coverage, request metadata, and rule version. Reference price changes are never
+presented as realized PnL.

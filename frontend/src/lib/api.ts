@@ -2,8 +2,8 @@ export type ApiHealth = {
   status: 'ok'
   service: string
   version: string
-  stage: 'review'
-  nansen_integration: 'private_review'
+  stage: 'preflight'
+  nansen_integration: 'private_review_and_preflight'
 }
 
 export type ReviewJob = {
@@ -88,6 +88,91 @@ export type CreateReviewInput = {
   max_entries: number
 }
 
+export type OutcomeCounts = {
+  gain: number
+  flat: number
+  decline: number
+  unavailable: number
+}
+
+export type PrecedentObservation = {
+  entry_id: string
+  occurred_at: string
+  token_address: string
+  pattern: string
+  outcome_band: 'gain' | 'flat' | 'decline' | 'unavailable'
+  price_change_pct: string | null
+}
+
+export type PatternSummary = {
+  pattern: string
+  description: string
+  sample_count: number
+  outcome_counts: OutcomeCounts
+  observations: PrecedentObservation[]
+}
+
+export type PrecedentReport = {
+  review_id: string
+  horizon: '24h' | '7d'
+  rule_version: string
+  patterns: PatternSummary[]
+  baseline: OutcomeCounts
+  context_observed: number
+  context_unavailable: number
+  evaluation_mode: 'descriptive_only'
+  evaluation_status: 'not_run_no_predictive_claim'
+  limitations: string[]
+}
+
+export type Preflight = {
+  preflight_id: string
+  review_id: string
+  token_address: string
+  horizon: '24h' | '7d'
+  status: 'pending' | 'running' | 'complete' | 'failed'
+  requests_attempted: number
+  credits_used: number
+  error_code: string | null
+  current_context: null | {
+    observed_at: string
+    timeframe: '1d'
+    coverage: 'observed' | 'unavailable'
+    smart_trader_net_flow_usd: string | null
+    smart_trader_avg_flow_usd: string | null
+    smart_trader_wallet_count: number | null
+    warnings: string[]
+    freshness: 'fresh' | 'stale'
+    freshness_basis: 'entryglass_retrieval_time'
+  }
+  comparison: null | {
+    pattern: string
+    rule_version: string
+    comparable: boolean
+    matching_precedent_count: number
+    matching_precedents: PrecedentObservation[]
+    outcome_counts: OutcomeCounts
+    missing_features: string[]
+    differences: string[]
+    limitations: string[]
+    recommendation: null
+    risk_score: null
+  }
+  evidence: null | {
+    source: 'Nansen'
+    endpoint: string
+    timeframe: '1d'
+    requested_from_utc: string
+    requested_to_utc: string
+    retrieved_at: string
+    request_id: string | null
+    warnings: string[]
+    quoted_credits: number | null
+    used_credits: number | null
+    attempt_count: number
+  }
+}
+
 function isApiHealth(value: unknown): value is ApiHealth {
   if (typeof value !== 'object' || value === null) return false
   const item = value as Record<string, unknown>
@@ -95,8 +180,8 @@ function isApiHealth(value: unknown): value is ApiHealth {
     item.status === 'ok' &&
     typeof item.service === 'string' &&
     typeof item.version === 'string' &&
-    item.stage === 'review' &&
-    item.nansen_integration === 'private_review'
+    item.stage === 'preflight' &&
+    item.nansen_integration === 'private_review_and_preflight'
   )
 }
 
@@ -154,4 +239,26 @@ export function revealOutcomes(reviewId: string, entryId: string): Promise<Outco
 
 export function getEvidence(reviewId: string, entryId: string): Promise<Evidence[]> {
   return fetchJson(`/api/v1/reviews/${encodeURIComponent(reviewId)}/entries/${encodeURIComponent(entryId)}/evidence`)
+}
+
+export function getPrecedents(
+  reviewId: string,
+  horizon: '24h' | '7d' = '7d',
+): Promise<PrecedentReport> {
+  return fetchJson(`/api/v1/reviews/${encodeURIComponent(reviewId)}/precedents?horizon=${horizon}`)
+}
+
+export function createPreflight(
+  reviewId: string,
+  tokenAddress: string,
+  horizon: '24h' | '7d',
+): Promise<Preflight> {
+  return fetchJson(`/api/v1/reviews/${encodeURIComponent(reviewId)}/preflights`, {
+    method: 'POST',
+    body: JSON.stringify({ token_address: tokenAddress, horizon }),
+  })
+}
+
+export function getPreflight(reviewId: string, preflightId: string): Promise<Preflight> {
+  return fetchJson(`/api/v1/reviews/${encodeURIComponent(reviewId)}/preflights/${encodeURIComponent(preflightId)}`)
 }

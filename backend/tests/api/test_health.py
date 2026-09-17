@@ -5,15 +5,15 @@ from fastapi.testclient import TestClient
 from entryglass import __version__
 
 
-def test_health_describes_the_private_review_stage(client: TestClient) -> None:
+def test_health_describes_the_private_preflight_stage(client: TestClient) -> None:
     response = client.get("/api/v1/health")
     assert response.status_code == 200
     assert response.json() == {
         "status": "ok",
         "service": "Entryglass API",
         "version": __version__,
-        "stage": "review",
-        "nansen_integration": "private_review",
+        "stage": "preflight",
+        "nansen_integration": "private_review_and_preflight",
     }
 
 
@@ -29,6 +29,9 @@ def test_openapi_advertises_review_journey(client: TestClient) -> None:
         "/api/v1/reviews/{review_id}/entries/{entry_id}",
         "/api/v1/reviews/{review_id}/entries/{entry_id}/outcomes",
         "/api/v1/reviews/{review_id}/entries/{entry_id}/evidence",
+        "/api/v1/reviews/{review_id}/precedents",
+        "/api/v1/reviews/{review_id}/preflights",
+        "/api/v1/reviews/{review_id}/preflights/{preflight_id}",
     }
 
 

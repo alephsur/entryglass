@@ -1,13 +1,20 @@
 import assert from 'node:assert/strict'
 import { afterEach, mock, test } from 'node:test'
-import { createReview, getApiHealth, revealOutcomes } from '../src/lib/api.ts'
+import {
+  createPreflight,
+  createReview,
+  getApiHealth,
+  getPrecedents,
+  getPreflight,
+  revealOutcomes,
+} from '../src/lib/api.ts'
 
 const health = {
   status: 'ok',
   service: 'Entryglass API',
   version: '0.1.0',
-  stage: 'review',
-  nansen_integration: 'private_review',
+  stage: 'preflight',
+  nansen_integration: 'private_review_and_preflight',
 }
 
 afterEach(() => { mock.restoreAll() })
@@ -76,6 +83,36 @@ test('later outcomes use a separate explicit reveal endpoint', async () => {
   })
   const response = await revealOutcomes('review-1', 'entry-1')
   assert.equal(response[0].state, 'pending')
+})
+
+test('personal precedents require an explicit report request', async () => {
+  mock.method(globalThis, 'fetch', async (url, options) => {
+    assert.equal(url, '/api/v1/reviews/review-1/precedents?horizon=7d')
+    assert.equal(options.method, undefined)
+    return Response.json({ review_id: 'review-1', horizon: '7d', patterns: [] })
+  })
+  const response = await getPrecedents('review-1', '7d')
+  assert.equal(response.horizon, '7d')
+})
+
+test('starts and polls a current-token comparison through review-scoped paths', async () => {
+  const token = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
+  let calls = 0
+  mock.method(globalThis, 'fetch', async (url, options) => {
+    calls += 1
+    if (calls === 1) {
+      assert.equal(url, '/api/v1/reviews/review-1/preflights')
+      assert.equal(options.method, 'POST')
+      assert.deepEqual(JSON.parse(options.body), { token_address: token, horizon: '24h' })
+      return Response.json({ preflight_id: 'preflight-1', status: 'pending' })
+    }
+    assert.equal(url, '/api/v1/reviews/review-1/preflights/preflight-1')
+    assert.equal(options.method, undefined)
+    return Response.json({ preflight_id: 'preflight-1', status: 'complete' })
+  })
+  await createPreflight('review-1', token, '24h')
+  const response = await getPreflight('review-1', 'preflight-1')
+  assert.equal(response.status, 'complete')
 })
 
 test('surfaces safe API detail instead of a fabricated result', async () => {

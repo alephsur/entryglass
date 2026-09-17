@@ -48,7 +48,7 @@ p { line-height: 1.55; }
 .intro { max-width: 620px; color: #3f5358; font-size: 18px; }
 .muted { color: var(--muted); }
 
-.status-panel, .review-form-panel, .progress-panel, .replay-card, .empty-state {
+.status-panel, .review-form-panel, .progress-panel, .replay-card, .empty-state, .precedent-panel, .preflight-panel {
   border: 1px solid var(--line);
   border-radius: 18px;
   background: var(--paper);
@@ -121,6 +121,49 @@ dd { margin: 7px 0 0; overflow-wrap: anywhere; font-size: 13px; font-weight: 650
 .outcome-card strong { margin: 6px 0; font-size: 20px; }
 .outcome-card small { color: var(--muted); }
 
+.precedent-panel, .preflight-panel { margin: 28px 0; padding: 30px; }
+.section-intro { max-width: 760px; margin: 12px 0 22px; color: var(--muted); font-size: 14px; }
+.precedent-controls, .preflight-form { display: flex; align-items: end; gap: 14px; }
+.precedent-controls label, .preflight-form label { display: grid; flex: 1 1 auto; gap: 8px; color: #45585d; font-size: 12px; font-weight: 700; }
+.precedent-controls select, .preflight-form input { min-height: 46px; border: 1px solid #cbd7d3; border-radius: 9px; background: white; color: var(--ink); padding: 10px 12px; }
+.precedent-controls label { flex: 0 0 210px; }
+.precedent-results, .comparison-results { display: grid; gap: 18px; margin-top: 26px; }
+.baseline-card, .current-card, .match-card { border: 1px solid var(--line); border-radius: 13px; background: #f9fbfa; padding: 20px; }
+.baseline-card { display: grid; grid-template-columns: minmax(210px, 1fr) minmax(360px, 1.5fr); align-items: center; gap: 24px; }
+.baseline-card strong, .baseline-card small, .result-label { display: block; }
+.baseline-card > div > strong { margin: 6px 0; font-size: 20px; }
+.baseline-card small { color: var(--muted); }
+.result-label { color: var(--accent); font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.count-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 9px; background: var(--line); }
+.count-row div { background: white; padding: 12px; text-align: center; }
+.count-row dd { font-size: 18px; }
+.count-row--compact { margin-top: 16px; }
+.count-row--compact div { padding: 9px 6px; }
+.pattern-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.pattern-card { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 13px; background: white; padding: 20px; }
+.pattern-title { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.pattern-title h3 { margin-top: 5px; }
+.pattern-title > strong { color: var(--accent); font-size: 28px; line-height: 1; }
+.pattern-card > p { min-height: 44px; color: var(--muted); font-size: 13px; }
+.observation-list { display: grid; gap: 7px; margin: 15px 0 0; padding: 0; list-style: none; }
+.observation-list li { display: flex; justify-content: space-between; gap: 12px; padding-top: 7px; border-top: 1px solid #edf1ef; color: var(--muted); font-size: 11px; }
+.observation-list strong { color: var(--ink); white-space: nowrap; }
+.empty-pattern { margin: 14px 0 0; color: var(--muted); font-size: 12px; font-style: italic; }
+.method-note, .comparison-notes { border-left: 3px solid #9fbab1; border-radius: 0 9px 9px 0; background: var(--soft); padding: 18px 20px; }
+.method-note p, .method-note li, .comparison-notes li { color: var(--muted); font-size: 12px; }
+.method-note ul, .comparison-notes ul { margin: 8px 0 0; padding-left: 18px; }
+.preflight-panel { margin-top: 0; }
+.preflight-form label { max-width: 720px; }
+.preflight-wait { display: flex; align-items: center; gap: 14px; margin-top: 22px; border-radius: 10px; background: var(--soft); padding: 16px; }
+.preflight-wait p { margin: 2px 0 0; color: var(--muted); font-size: 12px; }
+.current-card .metric-grid { margin-bottom: 0; }
+.freshness { border-radius: 100px; padding: 6px 10px; background: #e7f1ec; color: #285d50; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+.freshness--stale { background: #f7f1e4; color: var(--warning); }
+.match-card h3 { margin: 7px 0 16px; font-size: 24px; }
+.comparison-notes strong { display: block; margin-top: 14px; font-size: 12px; }
+.comparison-notes strong:first-child { margin-top: 0; }
+.non-verdict { margin: 16px 0 0; color: var(--ink); font-size: 13px; font-weight: 750; }
+
 .drawer { position: fixed; z-index: 20; inset: 0 0 0 auto; width: min(520px, 94vw); overflow-y: auto; background: white; padding: 30px; box-shadow: -20px 0 60px #102b2950; }
 .drawer-scrim { position: fixed; z-index: 19; inset: 0; width: 100%; border: 0; background: #102b2955; cursor: pointer; }
 .icon-button { width: 42px; height: 42px; background: var(--soft); color: var(--ink); font-size: 25px; }
@@ -143,6 +186,7 @@ dd { margin: 7px 0 0; overflow-wrap: anywhere; font-size: 13px; font-weight: 650
   .workspace { grid-template-columns: 260px minmax(0, 1fr); }
   .entry-facts, .metric-grid { grid-template-columns: 1fr; }
   .outcome-block { grid-template-columns: 1fr; }
+  .baseline-card { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 760px) {
@@ -155,6 +199,7 @@ dd { margin: 7px 0 0; overflow-wrap: anywhere; font-size: 13px; font-weight: 650
   .entry-list { position: static; }
   .entry-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .replay-topline, .context-heading { align-items: flex-start; }
+  .pattern-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 520px) {
@@ -164,8 +209,12 @@ dd { margin: 7px 0 0; overflow-wrap: anywhere; font-size: 13px; font-weight: 650
   .wallet-field, .form-submit { grid-column: auto; }
   .panel-heading, .progress-copy, .replay-topline, .context-heading, .principle, .site-footer { align-items: flex-start; flex-direction: column; }
   .entry-buttons { grid-template-columns: 1fr; }
-  .review-form-panel, .progress-panel, .replay-card { padding: 22px; }
+  .review-form-panel, .progress-panel, .replay-card, .precedent-panel, .preflight-panel { padding: 22px; }
   .outcome-grid { grid-template-columns: 1fr; }
+  .precedent-heading, .precedent-controls, .preflight-form { align-items: stretch; flex-direction: column; }
+  .precedent-controls label { flex-basis: auto; }
+  .count-row { grid-template-columns: repeat(2, 1fr); }
+  .observation-list li { align-items: flex-start; flex-direction: column; }
   .principle p { margin-top: 0; }
   .site-footer { justify-content: center; gap: 8px; }
 }

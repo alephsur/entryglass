@@ -2,12 +2,13 @@
 
 **Prepared:** September 15, 2026  
 **Updated:** September 17, 2026
-**Scope:** Entryglass 0.1.0 through M4 complete local review and replay
+**Scope:** Entryglass 0.1.0 through M5 personal precedents and preflight
 
 This report separates executed checks from unverified product behavior. It records
 the EG-001 local scaffold workflow, the offline validator, the bounded private EG-003
-feasibility spike, offline M2 ingestion, M3 temporal evidence, and the M4 browser
-journey. No M4 verification call contacted Nansen.
+feasibility spike, offline M2 ingestion, M3 temporal evidence, the M4 browser
+journey, and offline M5 precedent/preflight verification. No M4 or M5 verification
+call contacted Nansen.
 
 ## EG-001 checks executed successfully
 
@@ -136,6 +137,25 @@ focusable controls. Manual browser inspection confirmed the running local health
 contract and responsive layout. All browser provider responses were test-only route
 interceptions; no credential was loaded and no provider credit was used.
 
+## M5 precedent and preflight checks
+
+On September 17, the backend suite passed **70 tests** with one opt-in live test
+skipped. The frontend client suite passed **11 tests**. Ruff lint and formatting,
+Vue/TypeScript checking, and the Vite production build passed. The same six desktop
+and mobile Chromium journeys passed; the happy path now additionally verifies the
+explicit personal-precedent reveal, the declared net-outflow group, a completed
+current-token comparison, its matching sample count, and the absence of a
+recommendation or risk score.
+
+Pure domain tests exhaust the four mutually exclusive observed flow rules, keep
+missing input separate, and pin the flat outcome band to +/-2%. Application tests
+verify the same-wallet baseline, all visible rule groups, and the rule that a missing
+current feature cannot silently become a non-match. Adapter tests cover the exact
+Flow Intelligence endpoint and one-day request, observed zero, null preservation,
+and an empty result mapped to unavailable. SQLite tests verify durable preflight
+state and evidence. All provider behavior used synthetic transports or intercepted
+browser responses and consumed no credits.
+
 ## Environment used for EG-001
 
 - Host Python 3.14.4; the locked backend environment used Python 3.12.13
@@ -164,8 +184,9 @@ contract, but dependency updates should recheck them.
 - A live end-to-end M4 review against Nansen after these code changes. The earlier
   bounded EG-003 spike validates the observed contracts, while the M4 execution path
   is verified offline to avoid unapproved credit use.
-- Pattern engine, personal precedents, preflight, or trading behavior; these remain
-  deliberately unimplemented.
+- A live end-to-end M5 current-token preflight against Nansen after these code
+  changes. The request contract is checked against current documentation and covered
+  offline to avoid unapproved credit use. Trading remains deliberately unimplemented.
 
 ## Original archive preparation
 
@@ -176,4 +197,4 @@ full installation and browser workflow were correctly left unverified until this
 EG-001 update.
 
 The remaining foundation check is to build and start the Docker environment from a
-clean checkout. The next product milestone is M5 personal precedents and preflight.
+clean checkout. The next product milestone is M6 submission hardening.

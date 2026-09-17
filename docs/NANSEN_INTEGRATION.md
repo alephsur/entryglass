@@ -1,12 +1,12 @@
 # Nansen Integration Plan
 
-**Status: bounded validation plus M2-M4 private review integration implemented.**
+**Status: bounded validation plus M2-M5 private review and preflight implemented.**
 
 This file records the integration boundary. A budgeted, opt-in schema validator is
 implemented and a private live data-quality spike has completed. M2 adds budgeted
-wallet DEX ingestion. M3 adds separate historical-flow and OHLCV adapters, and M4
-exposes their durable local review through the browser. Pattern and preflight logic
-are still absent.
+wallet DEX ingestion. M3 adds separate historical-flow and OHLCV adapters, M4
+exposes their durable local review through the browser, and M5 adds local descriptive
+precedents plus one bounded current Flow Intelligence query.
 
 ## Candidate sources
 
@@ -35,6 +35,15 @@ truncated results, pending horizons, and provider failures remain distinct. [S14
 The documented profiler PnL routes are supplementary wallet/token summaries. They
 do not establish realized PnL for an individual entry without a separately defined
 and tested lot-accounting method. [S16]
+
+Current comparison uses `POST /api/v1/tgm/flow-intelligence` with only the `solana`
+chain, the validated token address, and the `1d` timeframe. The adapter accepts zero
+as an observation, preserves null average flow and warnings, and maps an empty result
+to unavailable coverage. It permits at most two attempts under the existing bounded
+transient-retry policy. The provider documentation listed this request at one credit
+when rechecked on September 17, 2026, and states that responses may be cached for 10
+to 30 minutes. Entryglass therefore labels retrieval age, not source-event freshness.
+[S5, S17]
 
 `NANSEN_BASE_URL` is the server origin only. Versioned paths are kept in explicit
 adapter contracts; they are not concatenated beneath `/api/v1` by assumption. API
@@ -79,6 +88,15 @@ claim DEX selling. OHLCV calls occur only in the separate outcome path. Both sto
 endpoint, hashed subject, exact period, retrieval time, request ID when present,
 warnings, credit metadata, response hash, adapter version, and methodology version.
 Raw provider payloads and API keys are never returned by the review API.
+
+## M5 current evidence envelope
+
+A preflight is created only by an explicit browser action after a completed local
+review. Its job and normalized observation persist in SQLite. Evidence records the
+exact endpoint, rolling one-day request period, retrieval time, request ID when
+present, warnings, attempt count, and quoted/used credits. The browser receives the
+normalized metrics and evidence metadata, never the key or raw response. Precedent
+aggregation itself is local and spends no provider credits.
 
 ## Publication and permissions
 

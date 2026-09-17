@@ -1,7 +1,6 @@
 # Preflight
 
-Reserved feature directory. Not implemented.
-
-Planned responsibility: A current token compared with compatible historical features.
-
-Follow the root ROADMAP.md; do not populate this directory with fake results.
+Implemented in the main local journey. After exploring precedents, the user can make
+one explicit current-token request and poll its durable result. The view shows the
+current timestamp/freshness, matching personal precedents, differences, missing
+features, and comparison limitations. It provides no recommendation or risk score.

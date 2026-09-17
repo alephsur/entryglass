@@ -1,7 +1,6 @@
 # Wallet Review
 
-Reserved feature directory. Not implemented.
-
-Planned responsibility: Wallet input, import progress, and the normalized entry list.
-
-Follow the root ROADMAP.md; do not populate this directory with fake results.
+Implemented in the main local journey: wallet input, declared dates and entry cap,
+durable progress, cancellation, partial/failure states, and the normalized entry
+list. The browser never receives the provider key and does not fabricate a completed
+review when the provider is unavailable.

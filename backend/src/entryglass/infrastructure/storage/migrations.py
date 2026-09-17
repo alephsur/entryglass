@@ -190,4 +190,51 @@ MIGRATIONS: tuple[tuple[int, str], ...] = (
         );
         """,
     ),
+    (
+        3,
+        """
+        CREATE TABLE preflight_jobs (
+            preflight_id TEXT PRIMARY KEY,
+            review_id TEXT NOT NULL REFERENCES review_jobs(review_id),
+            token_address TEXT NOT NULL,
+            horizon TEXT NOT NULL,
+            status TEXT NOT NULL,
+            timeframe TEXT,
+            coverage TEXT,
+            observed_at TEXT,
+            smart_trader_net_flow_usd TEXT,
+            smart_trader_avg_flow_usd TEXT,
+            smart_trader_wallet_count INTEGER,
+            warnings_json TEXT NOT NULL DEFAULT '[]',
+            requests_attempted INTEGER NOT NULL DEFAULT 0,
+            credits_used INTEGER NOT NULL DEFAULT 0,
+            error_code TEXT,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            completed_at TEXT
+        );
+        CREATE INDEX idx_preflight_review ON preflight_jobs(review_id, created_at DESC);
+
+        CREATE TABLE preflight_evidence (
+            evidence_id TEXT PRIMARY KEY,
+            preflight_id TEXT NOT NULL REFERENCES preflight_jobs(preflight_id),
+            provider TEXT NOT NULL,
+            endpoint TEXT NOT NULL,
+            subject_hash TEXT NOT NULL,
+            request_fingerprint TEXT NOT NULL,
+            response_hash TEXT NOT NULL,
+            requested_from_utc TEXT NOT NULL,
+            requested_to_utc TEXT NOT NULL,
+            retrieved_at TEXT NOT NULL,
+            request_id TEXT,
+            warnings_json TEXT NOT NULL,
+            quoted_credits INTEGER,
+            used_credits INTEGER,
+            attempt_count INTEGER NOT NULL,
+            adapter_version TEXT NOT NULL,
+            methodology_version TEXT NOT NULL,
+            UNIQUE (preflight_id, request_fingerprint)
+        );
+        """,
+    ),
 )

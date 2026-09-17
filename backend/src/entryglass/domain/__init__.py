@@ -1,1 +1,1 @@
-"""Pure validated domain contracts; analysis rules remain unimplemented."""
+"""Pure validated domain contracts and deterministic descriptive rules."""

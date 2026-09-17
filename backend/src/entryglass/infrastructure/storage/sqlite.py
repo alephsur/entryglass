@@ -1,5 +1,6 @@
 """SQLite implementation for private M2 ingestion and evidence storage."""
 
+import hashlib
 import json
 import sqlite3
 import uuid
@@ -12,8 +13,14 @@ from entryglass.application.reviews import ProviderEvidence, ReviewScope, eviden
 from entryglass.domain.context import ContextCoverage, HistoricalContext, PreEntryWindow
 from entryglass.domain.evidence import CoverageState, EvidenceRecord, ImportJob, ImportStatus
 from entryglass.domain.outcomes import OutcomeHorizon, OutcomeObservation, OutcomeState
+from entryglass.domain.preflight import CurrentContext, PreflightJob, PreflightStatus
 from entryglass.domain.reviews import ReviewJob, ReviewStage, ReviewStatus
-from entryglass.domain.trades import AmbiguousTrade, SwapLeg, TradeEntry
+from entryglass.domain.trades import (
+    AmbiguousTrade,
+    SwapLeg,
+    TradeEntry,
+    validate_solana_address,
+)
 from entryglass.infrastructure.storage.migrations import MIGRATIONS
 
 
@@ -707,6 +714,191 @@ class SqliteIngestionRepository:
             ).fetchall()
         return tuple(_provider_evidence_from_row(row) for row in rows)
 
+    def create_preflight(
+        self,
+        review_id: str,
+        token_address: str,
+        horizon: str,
+        *,
+        now: datetime,
+    ) -> PreflightJob:
+        validate_solana_address(token_address)
+        if horizon not in {"24h", "7d"}:
+            raise ValueError("Preflight horizon must be 24h or 7d.")
+        review = self.get_review(review_id)
+        if review.status not in {ReviewStatus.COMPLETE, ReviewStatus.PARTIAL}:
+            raise ValueError("Preflight requires a completed or partial review.")
+        preflight_id = uuid.uuid4().hex
+        timestamp = _serialize_time(now)
+        with self._connect() as connection:
+            connection.execute(
+                """
+                INSERT INTO preflight_jobs (
+                    preflight_id, review_id, token_address, horizon, status,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    preflight_id,
+                    review_id,
+                    token_address,
+                    horizon,
+                    PreflightStatus.PENDING.value,
+                    timestamp,
+                    timestamp,
+                ),
+            )
+        return self.get_preflight(preflight_id)
+
+    def get_preflight(self, preflight_id: str) -> PreflightJob:
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT * FROM preflight_jobs WHERE preflight_id = ?", (preflight_id,)
+            ).fetchone()
+        if row is None:
+            raise KeyError(f"Unknown preflight: {preflight_id}")
+        return _preflight_from_row(row)
+
+    def set_preflight_running(self, preflight_id: str) -> None:
+        with self._connect() as connection:
+            cursor = connection.execute(
+                """
+                UPDATE preflight_jobs SET status = ?, updated_at = ?
+                WHERE preflight_id = ? AND status = ?
+                """,
+                (
+                    PreflightStatus.RUNNING.value,
+                    _serialize_time(datetime.now(UTC)),
+                    preflight_id,
+                    PreflightStatus.PENDING.value,
+                ),
+            )
+        if cursor.rowcount == 0:
+            raise ValueError("The preflight is not pending.")
+
+    def complete_preflight(
+        self,
+        preflight_id: str,
+        *,
+        context: CurrentContext,
+        evidence: ProviderEvidence,
+        requests_attempted: int,
+        credits_used: int,
+    ) -> PreflightJob:
+        now = _serialize_time(datetime.now(UTC))
+        identity = f"{preflight_id}:{evidence.request_fingerprint}"
+        with self._connect() as connection:
+            cursor = connection.execute(
+                """
+                UPDATE preflight_jobs SET status = ?, timeframe = ?, coverage = ?,
+                    observed_at = ?, smart_trader_net_flow_usd = ?,
+                    smart_trader_avg_flow_usd = ?, smart_trader_wallet_count = ?,
+                    warnings_json = ?, requests_attempted = ?, credits_used = ?,
+                    updated_at = ?, completed_at = ?
+                WHERE preflight_id = ? AND status = ?
+                """,
+                (
+                    PreflightStatus.COMPLETE.value,
+                    context.timeframe,
+                    context.coverage.value,
+                    _serialize_time(context.observed_at),
+                    _decimal_or_none(context.smart_trader_net_flow_usd),
+                    _decimal_or_none(context.smart_trader_avg_flow_usd),
+                    context.smart_trader_wallet_count,
+                    json.dumps(context.warnings, separators=(",", ":")),
+                    requests_attempted,
+                    credits_used,
+                    now,
+                    now,
+                    preflight_id,
+                    PreflightStatus.RUNNING.value,
+                ),
+            )
+            if cursor.rowcount == 0:
+                raise ValueError("The preflight is not running.")
+            connection.execute(
+                """
+                INSERT OR IGNORE INTO preflight_evidence VALUES (
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                )
+                """,
+                (
+                    hashlib.sha256(identity.encode()).hexdigest(),
+                    preflight_id,
+                    "nansen",
+                    evidence.endpoint,
+                    evidence.subject_hash,
+                    evidence.request_fingerprint,
+                    evidence.response_hash,
+                    _serialize_time(evidence.requested_from_utc),
+                    _serialize_time(evidence.requested_to_utc),
+                    _serialize_time(evidence.retrieved_at),
+                    evidence.request_id,
+                    json.dumps(evidence.warnings, separators=(",", ":")),
+                    evidence.quoted_credits,
+                    evidence.used_credits,
+                    evidence.attempt_count,
+                    "nansen-current-flow-v1",
+                    "smart-trader-flow-v1",
+                ),
+            )
+        return self.get_preflight(preflight_id)
+
+    def fail_preflight(
+        self,
+        preflight_id: str,
+        *,
+        error_code: str,
+        requests_attempted: int,
+        credits_used: int,
+    ) -> PreflightJob:
+        now = _serialize_time(datetime.now(UTC))
+        with self._connect() as connection:
+            cursor = connection.execute(
+                """
+                UPDATE preflight_jobs SET status = ?, error_code = ?,
+                    requests_attempted = ?, credits_used = ?, updated_at = ?, completed_at = ?
+                WHERE preflight_id = ? AND status = ?
+                """,
+                (
+                    PreflightStatus.FAILED.value,
+                    error_code,
+                    requests_attempted,
+                    credits_used,
+                    now,
+                    now,
+                    preflight_id,
+                    PreflightStatus.RUNNING.value,
+                ),
+            )
+        if cursor.rowcount == 0:
+            raise ValueError("The preflight is not running.")
+        return self.get_preflight(preflight_id)
+
+    def get_preflight_evidence(self, preflight_id: str) -> ProviderEvidence | None:
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT * FROM preflight_evidence WHERE preflight_id = ?",
+                (preflight_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        return ProviderEvidence(
+            kind="current_context",
+            endpoint=row["endpoint"],
+            subject_hash=row["subject_hash"],
+            request_fingerprint=row["request_fingerprint"],
+            response_hash=row["response_hash"],
+            requested_from_utc=_parse_time(row["requested_from_utc"]),
+            requested_to_utc=_parse_time(row["requested_to_utc"]),
+            retrieved_at=_parse_time(row["retrieved_at"]),
+            request_id=row["request_id"],
+            warnings=tuple(json.loads(row["warnings_json"])),
+            quoted_credits=row["quoted_credits"],
+            used_credits=row["used_credits"],
+            attempt_count=row["attempt_count"],
+        )
+
     def list_evidence(self, job_id: str) -> tuple[EvidenceRecord, ...]:
         with self._connect() as connection:
             rows = connection.execute(
@@ -786,6 +978,34 @@ def _review_from_row(row: sqlite3.Row) -> ReviewJob:
         import_job_id=row["import_job_id"],
         cancellation_requested=bool(row["cancellation_requested"]),
         error_code=row["error_code"],
+    )
+
+
+def _preflight_from_row(row: sqlite3.Row) -> PreflightJob:
+    context = None
+    if row["status"] == PreflightStatus.COMPLETE.value:
+        context = CurrentContext(
+            token_address=row["token_address"],
+            observed_at=_parse_time(row["observed_at"]),
+            timeframe=row["timeframe"],
+            coverage=ContextCoverage(row["coverage"]),
+            smart_trader_net_flow_usd=_parse_decimal(row["smart_trader_net_flow_usd"]),
+            smart_trader_avg_flow_usd=_parse_decimal(row["smart_trader_avg_flow_usd"]),
+            smart_trader_wallet_count=row["smart_trader_wallet_count"],
+            warnings=tuple(json.loads(row["warnings_json"])),
+        )
+    return PreflightJob(
+        preflight_id=row["preflight_id"],
+        review_id=row["review_id"],
+        token_address=row["token_address"],
+        horizon=row["horizon"],
+        status=PreflightStatus(row["status"]),
+        created_at=_parse_time(row["created_at"]),
+        updated_at=_parse_time(row["updated_at"]),
+        requests_attempted=row["requests_attempted"],
+        credits_used=row["credits_used"],
+        error_code=row["error_code"],
+        context=context,
     )
 
 

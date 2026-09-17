@@ -31,6 +31,7 @@ competition terms before implementation and submission.
 - **S15 - Backtesting data overview:** https://docs.nansen.ai/api/backtesting-data
 - **S16 - Address PnL and Trade Performance:**
   https://docs.nansen.ai/api/profiler/address-pnl-and-trade-performance
+- **S17 - Endpoint credit overview:** https://docs.nansen.ai/api/overview
 
 The campaign cutoff is September 27, 2026 at 23:59 UTC. The detailed rules require
 1,000+ calls, a public GitHub repository, an X post tagging Nansen, a 30-60 second

@@ -7,12 +7,14 @@ historical market context, then comparing a possible new entry with those preced
 The name combines an entry with a lens for examining it. It is a working project
 name, not a claim of trademark or domain availability.
 
-> **Release 0.1.0 implements the review and replay journey through M4.**
+> **Release 0.1.0 implements the local journey through M5.**
 > A local user can review a bounded public-wallet scope, inspect strictly pre-entry
 > historical flow context, explicitly reveal separate later price observations, and
-> inspect evidence metadata. Personal pattern evaluation, preflight comparison,
-> trading, and simulated investment results are not implemented. Provider evidence
-> remains private to the local application.
+> inspect evidence metadata. The user can then explicitly explore four versioned,
+> descriptive personal-precedent rules and compare a token's current one-day flow
+> with compatible precedents. No probability, risk score, recommendation, trading,
+> or simulated investment result is produced. Provider evidence remains private to
+> the local application.
 
 ## Start here
 
@@ -29,12 +31,12 @@ All authored documentation, source comments, and interface copy are in English.
 
 | Area | Current contents |
 | --- | --- |
-| Backend | FastAPI review jobs, replay/outcome/evidence reads, typed settings and health |
-| Frontend | Vue review journey with progress, coverage, hidden outcomes and evidence drawer |
-| Domain | Entry normalization, strict pre-entry context, separated outcomes and job states |
-| Infrastructure | Bounded Nansen adapters, durable SQLite jobs, private cache and evidence |
+| Backend | FastAPI review jobs, replay, precedents, current-token preflight, typed settings and health |
+| Frontend | Vue review journey, hidden outcomes, evidence, descriptive patterns and comparison |
+| Domain | Entry normalization, temporal separation, four versioned flow rules and explicit missing states |
+| Infrastructure | Bounded Nansen adapters, durable review/preflight jobs, private cache and evidence |
 | Development | Locked local setup, Make commands, safe setup script, development Docker configuration |
-| Quality | 62 backend tests, 9 frontend tests, 6 Chromium journeys, static checks and build |
+| Quality | 70 passing backend tests, 11 frontend tests, 6 Chromium journeys, static checks and build |
 | Planning | Roadmap, architecture, methodology, integration notes, agent instructions |
 
 ## Option A: local development
@@ -75,6 +77,10 @@ review returns an explicit configuration message and spends no credits. To test 
 live review, set the key only in the root `.env`, restart the backend, paste a public
 Solana wallet, review the visible date range and entry limit, and select **Review
 wallet**. The default server ceiling is 5 entries, 15 requests, and 32 credits.
+After the review completes, **Explore personal precedents** reads only local review
+data. **Run current comparison** makes one bounded current Flow Intelligence query
+for the supplied token and shows its timestamp, freshness, matches, differences,
+missing features, and limitations.
 
 **Do not open `frontend/index.html` using `file://`.** This is a Vite project and
 must be served through its development server. Browser API requests use `/api`
@@ -180,10 +186,10 @@ entryglass/
   backend/
     pyproject.toml
     src/entryglass/
-      api/routes/{health,reviews}.py
+      api/routes/{health,reviews,precedents}.py
       core/config.py
       domain/{trades,evidence,context,outcomes,reviews,patterns,preflight}/
-      application/{provider,ingestion,reviews}.py
+      application/{provider,ingestion,reviews,precedents,preflight}.py
       infrastructure/{nansen,storage}/
     tests/{api,unit,integration}/
   frontend/
@@ -221,9 +227,11 @@ must still protect backups and the surrounding filesystem.
 
 ## Product boundaries
 
-The implemented review distinguishes transfers from verified trades, historical
-context from future outcomes, and price changes from realized PnL. It displays
-coverage and missing-data states rather than inventing a reassuring score.
+The implemented journey distinguishes transfers from verified trades, historical
+context from future outcomes, and price changes from realized PnL. Personal
+precedents show all four declared groups and a same-wallet baseline. The current
+comparison displays missingness and limitations rather than inventing a reassuring
+score or action.
 See [docs/METHODOLOGY.md](docs/METHODOLOGY.md).
 
 Do not represent this incomplete product as an investment recommendation service or an

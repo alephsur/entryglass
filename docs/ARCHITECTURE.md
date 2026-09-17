@@ -6,7 +6,8 @@ Entryglass is a small local-first monorepo with one FastAPI process and one Vue
 development server. The browser creates and polls bounded review jobs through the
 Vite `/api` proxy. FastAPI runs the existing ingestion use case plus independent
 historical-context and later-price requests in a local background thread. SQLite is
-the source of truth for progress, cancellation, replay, and evidence.
+the source of truth for progress, cancellation, replay, evidence, and current-token
+preflight state.
 
 ```text
 Browser -> Vue review -> Vite /api proxy -> FastAPI review routes
@@ -15,13 +16,17 @@ Browser -> Vue review -> Vite /api proxy -> FastAPI review routes
                                           -> pre-entry context -> Nansen
                                           -> later prices -> Nansen
                                           \-> private SQLite
+Browser -> explicit precedents read -> pure versioned rules -> private SQLite
+Browser -> explicit token preflight -> one bounded current flow query -> Nansen
+                                    \-> durable result/evidence -> private SQLite
 Developer -> opt-in validation command -> Nansen API
 Developer -> opt-in import command -> ingestion use case -> Nansen / SQLite
 ```
 
 A health response still does not verify credits, provider availability, database
-coverage, or a wallet result. Starting a review is the explicit credit-consuming
-action and requires the server-side key. Reads never expose the key or raw payloads.
+coverage, or a wallet result. Starting a review or current comparison is an explicit
+credit-consuming action and requires the server-side key. Reads never expose the key
+or raw payloads.
 
 ## Modular structure
 
@@ -36,18 +41,18 @@ HTTP routes
 
 | Directory | Responsibility | Current state |
 | --- | --- | --- |
-| `api/` | Job, replay, explicit outcome reveal, evidence, and health contracts | M4 implemented |
+| `api/` | Job, replay, outcome reveal, evidence, precedents, preflight, and health contracts | M5 implemented |
 | `core/` | Typed server configuration | Implemented |
 | `domain/trades/` | Economic entry contract, Solana validation, routing normalization | Implemented for wallet entries |
 | `domain/evidence/` | Coverage, evidence, and import-job state | Implemented for M2 |
 | `domain/context/` | Strict pre-entry windows, coverage, and nullable observations | M3 implemented |
 | `domain/outcomes/` | Separate later reference prices, explicitly not realized PnL | M3 implemented |
 | `domain/reviews/` | Durable review job and stage state | M4 implemented |
-| `domain/patterns/` | Transparent rule matches and evaluation | Reserved |
-| `domain/preflight/` | Comparison with historical precedents | Reserved |
-| `application/` | Validation, ingestion, context/outcome, and review orchestration | M1-M4 implemented |
-| `infrastructure/nansen/` | Typed wallet, historical-flow, and OHLCV adapters | M1-M3 implemented |
-| `infrastructure/storage/` | Import/review jobs, replay data, evidence, and page cache | M2-M4 implemented |
+| `domain/patterns/` | Four deterministic flow rules and fixed outcome bands | M5 implemented |
+| `domain/preflight/` | Current context and durable comparison job state | M5 implemented |
+| `application/` | Validation, ingestion, review, precedents, and preflight use cases | M1-M5 implemented |
+| `infrastructure/nansen/` | Typed wallet, historical flow, OHLCV, and current flow adapters | M1-M5 implemented |
+| `infrastructure/storage/` | Import/review/preflight jobs, replay, evidence, and page cache | M2-M5 implemented |
 
 Domain code must not import FastAPI, database drivers, or the HTTP client. Provider
 responses must be normalized at the boundary, preserving nulls, warnings, source
@@ -60,6 +65,12 @@ entry listing, one-entry replay, outcome reveal, and evidence reads map persiste
 state without in-memory-only results. Creation fails explicitly when the provider is
 not configured. Empty, partial, failed, and cancelled jobs remain distinct. No task
 queue, Redis service, auth layer, scoring engine, or fake successful report was added.
+
+`GET /api/v1/reviews/{review_id}/precedents` applies the same pure rule set to every
+entry in the selected review and returns all groups plus the same-wallet baseline.
+`POST /api/v1/reviews/{review_id}/preflights` starts one durable current-context
+request; its poll endpoint joins the completed current observation with the already
+persisted precedents. The HTTP contract fixes recommendation and risk score to null.
 
 ## Data separation
 

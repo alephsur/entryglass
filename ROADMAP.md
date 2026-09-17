@@ -1,9 +1,9 @@
 # Entryglass Roadmap
 
 **Baseline:** 2026-09-15  
-**Current state:** M4 complete review and replay journey completed
+**Current state:** M5 personal precedents and preflight completed
 
-**Next task:** Begin M5 personal precedents and preflight
+**Next task:** Begin M6 submission hardening
 
 **Delivery approach:** One developer, one chain, one complete user journey
 
@@ -158,18 +158,18 @@ The happy path and at least two failure paths are reproducible.
 
 ### M5 - Personal precedents and preflight
 
-**Target:** September 22-24. **Priority:** P0. **Depends on:** M4.
+**Status:** Completed September 17. **Priority:** P0. **Depends on:** M4.
 
-- [ ] Specify three or four rules before evaluating the demonstration wallet.
-- [ ] Show matching winning, losing, and flat observations with sample counts,
+- [x] Specify three or four rules before evaluating the demonstration wallet.
+- [x] Show matching winning, losing, and flat observations with sample counts,
       coverage, and an appropriate same-wallet comparison baseline.
-- [ ] Separate exploratory patterns from chronological held-out evaluation.
+- [x] Separate exploratory patterns from chronological held-out evaluation.
       Purge overlapping outcome horizons when evaluating predictive claims.
-- [ ] Suppress probability or confidence claims when samples do not support them.
-- [ ] Add token input and current-context retrieval with timestamps and freshness.
-- [ ] Reuse only features whose historical and live definitions are comparable.
-- [ ] Show matching precedents, differences, missing features, and limitations.
-- [ ] Do not expose buy/sell recommendations, automated execution, or a risk score
+- [x] Suppress probability or confidence claims when samples do not support them.
+- [x] Add token input and current-context retrieval with timestamps and freshness.
+- [x] Reuse only features whose historical and live definitions are comparable.
+- [x] Show matching precedents, differences, missing features, and limitations.
+- [x] Do not expose buy/sell recommendations, automated execution, or a risk score
       that implies an unvalidated probability.
 
 **Acceptance:** Preflight is a transparent comparison, not a claim that losses can
@@ -241,7 +241,7 @@ structured evidence, but must not create evidence or decide the verdict.
 
 ## 7. Current implementation handoff
 
-**EG-001, EG-002, EG-003, M2, M3, and M4 are complete.** The validated sample required
+**EG-001, EG-002, EG-003, and M2-M5 are complete.** The validated sample required
 expanding beyond the planned 90-day scope: the authorized wallet contained no entries
 in 90 days, two in one year, and three across documented Solana coverage. All three
 pre-entry contexts had observed zero Smart Trader net flow, unavailable average
@@ -251,9 +251,12 @@ sample, not evidence of a predictive pattern.
 The local application now provides typed, budgeted wallet ingestion, strictly
 pre-entry historical flow context, separate 24-hour and 7-day reference-price
 observations, durable job progress/cancellation, replay with hidden outcomes, and an
-evidence drawer. The ordinary and browser suites remain offline. Begin M5 with a
-small set of predeclared personal-precedent rules; do not add predictive scores,
-claims about selling, or trading execution.
+evidence drawer. M5 adds four predeclared flow rules, a same-wallet descriptive
+baseline, explicit personal-precedent exploration, and a bounded current-token
+comparison using the documented rolling one-day flow endpoint. Missing current
+features remain unavailable, and the contract contains no recommendation or risk
+score. The ordinary and browser suites remain offline. Begin M6 with submission
+hardening; do not add predictive claims, claims about selling, or trading execution.
 
 [S1]: https://nansen.ai/campaigns/meridian-buildathon
 [S7]: https://release.nansen.ai/help/articles/3540155-nansen-meridian-buildathon-sep-14-27

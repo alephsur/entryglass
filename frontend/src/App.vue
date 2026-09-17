@@ -3,14 +3,25 @@ import { computed, nextTick, onUnmounted, ref } from 'vue'
 import SystemStatus from './components/SystemStatus.vue'
 import {
   cancelReview,
+  createPreflight,
   createReview,
   getEvidence,
+  getPrecedents,
+  getPreflight,
   getReplay,
   getReview,
   listReviewEntries,
   revealOutcomes,
 } from './lib/api'
-import type { EntrySummary, Evidence, Outcome, ReplayEntry, ReviewJob } from './lib/api'
+import type {
+  EntrySummary,
+  Evidence,
+  Outcome,
+  PrecedentReport,
+  Preflight,
+  ReplayEntry,
+  ReviewJob,
+} from './lib/api'
 
 const today = new Date()
 const defaultStart = new Date(today)
@@ -30,11 +41,18 @@ const busy = ref(false)
 const detailBusy = ref(false)
 const revealBusy = ref(false)
 const evidenceOpen = ref(false)
+const precedents = ref<PrecedentReport | null>(null)
+const precedentBusy = ref(false)
+const precedentHorizon = ref<'24h' | '7d'>('7d')
+const candidateToken = ref('')
+const preflight = ref<Preflight | null>(null)
+const preflightBusy = ref(false)
 const error = ref<string | null>(null)
 const replayHeading = ref<HTMLElement | null>(null)
 const evidenceButton = ref<HTMLButtonElement | null>(null)
 const drawerClose = ref<HTMLButtonElement | null>(null)
 let pollTimer: number | undefined
+let preflightTimer: number | undefined
 
 const active = computed(() => job.value?.status === 'pending' || job.value?.status === 'running')
 const terminal = computed(() => job.value && !active.value)
@@ -56,6 +74,9 @@ async function startReview(): Promise<void> {
   outcomes.value = null
   selectedId.value = null
   evidenceOpen.value = false
+  precedents.value = null
+  preflight.value = null
+  candidateToken.value = ''
   try {
     job.value = await createReview({
       wallet_address: wallet.value.trim(),
@@ -150,6 +171,57 @@ async function requestCancel(): Promise<void> {
   }
 }
 
+async function explorePrecedents(): Promise<void> {
+  if (!job.value || precedentBusy.value) return
+  precedentBusy.value = true
+  error.value = null
+  try {
+    precedents.value = await getPrecedents(job.value.review_id, precedentHorizon.value)
+    preflight.value = null
+  } catch (cause) {
+    error.value = safeMessage(cause)
+  } finally {
+    precedentBusy.value = false
+  }
+}
+
+async function runPreflight(): Promise<void> {
+  if (!job.value || !precedents.value || preflightBusy.value) return
+  preflightBusy.value = true
+  error.value = null
+  try {
+    preflight.value = await createPreflight(
+      job.value.review_id,
+      candidateToken.value.trim(),
+      precedentHorizon.value,
+    )
+    schedulePreflightPoll(250)
+  } catch (cause) {
+    error.value = safeMessage(cause)
+    preflightBusy.value = false
+  }
+}
+
+function schedulePreflightPoll(delay = 1200): void {
+  if (preflightTimer) window.clearTimeout(preflightTimer)
+  preflightTimer = window.setTimeout(() => { void pollPreflight() }, delay)
+}
+
+async function pollPreflight(): Promise<void> {
+  if (!job.value || !preflight.value) return
+  try {
+    preflight.value = await getPreflight(job.value.review_id, preflight.value.preflight_id)
+    if (preflight.value.status === 'pending' || preflight.value.status === 'running') {
+      schedulePreflightPoll()
+    } else {
+      preflightBusy.value = false
+    }
+  } catch (cause) {
+    error.value = safeMessage(cause)
+    preflightBusy.value = false
+  }
+}
+
 function compact(value: string): string {
   return value.length > 16 ? `${value.slice(0, 7)}…${value.slice(-5)}` : value
 }
@@ -177,8 +249,19 @@ function stateLabel(value: string): string {
   return value.replaceAll('_', ' ').replace(/^./, (character) => character.toUpperCase())
 }
 
+function patternLabel(value: string): string {
+  return {
+    smart_trader_net_inflow: 'Net inflow',
+    smart_trader_net_outflow: 'Net outflow',
+    smart_trader_no_observed_flow: 'No observed flow',
+    smart_trader_active_flat: 'Active, net flat',
+    unavailable: 'Unavailable',
+  }[value] ?? stateLabel(value)
+}
+
 onUnmounted(() => {
   if (pollTimer) window.clearTimeout(pollTimer)
+  if (preflightTimer) window.clearTimeout(preflightTimer)
 })
 </script>
 
@@ -342,6 +425,149 @@ onUnmounted(() => {
             </div>
           </section>
         </article>
+      </section>
+
+      <section v-if="terminal && entries.length" class="precedent-panel" aria-labelledby="precedent-title">
+        <div class="panel-heading precedent-heading">
+          <div>
+            <p class="eyebrow">04 / Personal precedents</p>
+            <h2 id="precedent-title">Explore recurring context</h2>
+          </div>
+          <p class="scope-summary">Same wallet · declared rules · descriptive only</p>
+        </div>
+        <p class="section-intro">Group the reviewed entries by their historical Smart Trader flow, then inspect the later reference-price outcomes. This reveals aggregated outcomes only when you ask for them.</p>
+        <div class="precedent-controls">
+          <label>
+            <span>Outcome horizon</span>
+            <select v-model="precedentHorizon" name="precedent-horizon">
+              <option value="24h">24 hours</option>
+              <option value="7d">7 days</option>
+            </select>
+          </label>
+          <button class="button" type="button" :disabled="precedentBusy" @click="explorePrecedents">
+            {{ precedentBusy ? 'Building precedents…' : precedents ? 'Refresh personal precedents' : 'Explore personal precedents' }}
+          </button>
+        </div>
+
+        <div v-if="precedents" class="precedent-results" aria-live="polite">
+          <div class="baseline-card">
+            <div>
+              <span class="result-label">Same-wallet baseline / {{ precedents.horizon }}</span>
+              <strong>{{ entries.length }} reviewed entries</strong>
+              <small>{{ precedents.context_observed }} with observed context · {{ precedents.context_unavailable }} unavailable</small>
+            </div>
+            <dl class="count-row">
+              <div><dt>Gain</dt><dd>{{ precedents.baseline.gain }}</dd></div>
+              <div><dt>Flat</dt><dd>{{ precedents.baseline.flat }}</dd></div>
+              <div><dt>Decline</dt><dd>{{ precedents.baseline.decline }}</dd></div>
+              <div><dt>Unavailable</dt><dd>{{ precedents.baseline.unavailable }}</dd></div>
+            </dl>
+          </div>
+
+          <div class="pattern-grid">
+            <article v-for="pattern in precedents.patterns" :key="pattern.pattern" class="pattern-card">
+              <div class="pattern-title">
+                <div><span class="result-label">Declared rule</span><h3>{{ patternLabel(pattern.pattern) }}</h3></div>
+                <strong>{{ pattern.sample_count }}</strong>
+              </div>
+              <p>{{ pattern.description }}</p>
+              <dl class="count-row count-row--compact">
+                <div><dt>Gain</dt><dd>{{ pattern.outcome_counts.gain }}</dd></div>
+                <div><dt>Flat</dt><dd>{{ pattern.outcome_counts.flat }}</dd></div>
+                <div><dt>Decline</dt><dd>{{ pattern.outcome_counts.decline }}</dd></div>
+                <div><dt>N/A</dt><dd>{{ pattern.outcome_counts.unavailable }}</dd></div>
+              </dl>
+              <ul v-if="pattern.observations.length" class="observation-list">
+                <li v-for="item in pattern.observations" :key="item.entry_id">
+                  <span>{{ compact(item.token_address) }}</span>
+                  <strong>{{ stateLabel(item.outcome_band) }}<template v-if="item.price_change_pct !== null"> · {{ Number(item.price_change_pct).toFixed(1) }}%</template></strong>
+                </li>
+              </ul>
+              <p v-else class="empty-pattern">No reviewed entry matched this rule.</p>
+            </article>
+          </div>
+
+          <div class="method-note">
+            <strong>Rule {{ precedents.rule_version }}</strong>
+            <p>This view is descriptive. It does not estimate probability, confidence, realized PnL, or what you should do next.</p>
+            <p>Outcome display bands: gain above +2%, flat from -2% through +2%, and decline below -2%.</p>
+            <ul><li v-for="limitation in precedents.limitations" :key="limitation">{{ limitation }}</li></ul>
+          </div>
+        </div>
+      </section>
+
+      <section v-if="precedents && (job?.status === 'complete' || job?.status === 'partial')" class="preflight-panel" aria-labelledby="preflight-title">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">05 / Current comparison</p>
+            <h2 id="preflight-title">Compare a token before acting</h2>
+          </div>
+          <p class="scope-summary">One bounded current query · up to 2 attempts · server-side key</p>
+        </div>
+        <p class="section-intro">Fetch the token's current one-day Smart Trader flow and compare only the declared features with your personal precedents above.</p>
+        <form class="preflight-form" @submit.prevent="runPreflight">
+          <label>
+            <span>Solana token address</span>
+            <input v-model="candidateToken" name="candidate-token" required minlength="32" maxlength="44" autocomplete="off" placeholder="Paste a token address" />
+          </label>
+          <button class="button" type="submit" :disabled="preflightBusy">
+            {{ preflightBusy ? 'Comparing…' : 'Run current comparison' }}
+          </button>
+        </form>
+
+        <div v-if="preflight && (preflight.status === 'pending' || preflight.status === 'running')" class="preflight-wait" aria-live="polite">
+          <span class="status-dot"></span>
+          <div><strong>Fetching current context…</strong><p>The historical precedents stay fixed while the current observation is retrieved.</p></div>
+        </div>
+        <p v-else-if="preflight?.status === 'failed'" class="alert alert--error" role="alert">The current comparison could not be completed ({{ preflight.error_code || 'provider error' }}). No result was inferred.</p>
+
+        <div v-else-if="preflight?.status === 'complete' && preflight.current_context && preflight.comparison" class="comparison-results" aria-live="polite">
+          <article class="current-card">
+            <div class="pattern-title">
+              <div><span class="result-label">Current rolling 1 day</span><h3>{{ patternLabel(preflight.comparison.pattern) }}</h3></div>
+              <span class="freshness" :class="`freshness--${preflight.current_context.freshness}`">{{ preflight.current_context.freshness === 'fresh' ? 'recent retrieval' : 'stale retrieval' }}</span>
+            </div>
+            <p class="period">Retrieved {{ dateTime(preflight.current_context.observed_at) }} · {{ preflight.requests_attempted }} {{ preflight.requests_attempted === 1 ? 'attempt' : 'attempts' }} · {{ preflight.credits_used }} credits · freshness is based on local retrieval time</p>
+            <div class="metric-grid">
+              <div><span>Net flow</span><strong>{{ money(preflight.current_context.smart_trader_net_flow_usd) }}</strong></div>
+              <div><span>Average flow</span><strong>{{ money(preflight.current_context.smart_trader_avg_flow_usd) }}</strong></div>
+              <div><span>Observed wallets</span><strong>{{ preflight.current_context.smart_trader_wallet_count ?? 'Unavailable' }}</strong></div>
+            </div>
+          </article>
+
+          <article class="match-card">
+            <span class="result-label">Matching personal precedents / {{ preflight.horizon }}</span>
+            <h3>{{ preflight.comparison.matching_precedent_count }} matching {{ preflight.comparison.matching_precedent_count === 1 ? 'entry' : 'entries' }}</h3>
+            <dl class="count-row">
+              <div><dt>Gain</dt><dd>{{ preflight.comparison.outcome_counts.gain }}</dd></div>
+              <div><dt>Flat</dt><dd>{{ preflight.comparison.outcome_counts.flat }}</dd></div>
+              <div><dt>Decline</dt><dd>{{ preflight.comparison.outcome_counts.decline }}</dd></div>
+              <div><dt>Unavailable</dt><dd>{{ preflight.comparison.outcome_counts.unavailable }}</dd></div>
+            </dl>
+            <ul v-if="preflight.comparison.matching_precedents.length" class="observation-list">
+              <li v-for="item in preflight.comparison.matching_precedents" :key="item.entry_id">
+                <span>{{ compact(item.token_address) }} · {{ dateTime(item.occurred_at) }}</span>
+                <strong>{{ stateLabel(item.outcome_band) }}<template v-if="item.price_change_pct !== null"> · {{ Number(item.price_change_pct).toFixed(1) }}%</template></strong>
+              </li>
+            </ul>
+            <p v-else class="empty-pattern">No historical entry in this review matched the current rule.</p>
+          </article>
+
+          <div class="comparison-notes">
+            <p v-if="!preflight.comparison.comparable" class="alert alert--warning">Current context is unavailable, so Entryglass keeps this comparison unavailable instead of treating it as no activity.</p>
+            <template v-if="preflight.comparison.missing_features.length">
+              <strong>Missing current features</strong>
+              <ul><li v-for="item in preflight.comparison.missing_features" :key="item">{{ stateLabel(item) }}</li></ul>
+            </template>
+            <template v-if="preflight.comparison.differences.length">
+              <strong>Differences to keep in view</strong>
+              <ul><li v-for="item in preflight.comparison.differences" :key="item">{{ item }}</li></ul>
+            </template>
+            <strong>Comparison limits</strong>
+            <ul><li v-for="item in preflight.comparison.limitations" :key="item">{{ item }}</li></ul>
+            <p class="non-verdict">No recommendation or risk score is produced.</p>
+          </div>
+        </div>
       </section>
 
       <aside v-if="evidenceOpen" class="drawer" role="dialog" aria-modal="true" aria-labelledby="evidence-title" @keydown.esc="closeEvidence">

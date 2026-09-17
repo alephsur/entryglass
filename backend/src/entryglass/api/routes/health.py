@@ -16,8 +16,8 @@ class HealthResponse(BaseModel):
     status: Literal["ok"] = "ok"
     service: str = "Entryglass API"
     version: str = __version__
-    stage: Literal["review"] = "review"
-    nansen_integration: Literal["private_review"] = "private_review"
+    stage: Literal["preflight"] = "preflight"
+    nansen_integration: Literal["private_review_and_preflight"] = "private_review_and_preflight"
 
 
 @router.get("/health", response_model=HealthResponse)

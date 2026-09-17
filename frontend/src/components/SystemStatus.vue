@@ -47,6 +47,6 @@ onMounted(() => { void refresh() })
     <button class="button" type="button" :disabled="busy" @click="refresh">
       {{ busy ? 'Checking...' : 'Check API connection' }}
     </button>
-    <p class="panel-note">A review requires a server-side Nansen key. It is never sent to this browser.</p>
+    <p class="panel-note">Live review and current comparison require a server-side Nansen key. It is never sent to this browser.</p>
   </section>
 </template>
