@@ -1,26 +1,35 @@
-"""Verify the small public surface of the scaffold."""
+"""Verify the deliberately small public HTTP surface."""
 
 from fastapi.testclient import TestClient
 
 from entryglass import __version__
 
 
-def test_health_is_explicit_about_unimplemented_features(client: TestClient) -> None:
+def test_health_describes_the_private_review_stage(client: TestClient) -> None:
     response = client.get("/api/v1/health")
     assert response.status_code == 200
     assert response.json() == {
         "status": "ok",
         "service": "Entryglass API",
         "version": __version__,
-        "stage": "scaffold",
-        "nansen_integration": "validation_only",
+        "stage": "review",
+        "nansen_integration": "private_review",
     }
 
 
-def test_openapi_only_advertises_health(client: TestClient) -> None:
+def test_openapi_advertises_review_journey(client: TestClient) -> None:
     response = client.get("/openapi.json")
     assert response.status_code == 200
-    assert set(response.json()["paths"]) == {"/api/v1/health"}
+    assert set(response.json()["paths"]) == {
+        "/api/v1/health",
+        "/api/v1/reviews",
+        "/api/v1/reviews/{review_id}",
+        "/api/v1/reviews/{review_id}/cancel",
+        "/api/v1/reviews/{review_id}/entries",
+        "/api/v1/reviews/{review_id}/entries/{entry_id}",
+        "/api/v1/reviews/{review_id}/entries/{entry_id}/outcomes",
+        "/api/v1/reviews/{review_id}/entries/{entry_id}/evidence",
+    }
 
 
 def test_docs_are_available(client: TestClient) -> None:

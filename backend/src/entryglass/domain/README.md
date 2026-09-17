@@ -1,6 +1,7 @@
 # Domain Layer
 
-Contains the pure entry, strict pre-entry window, historical-context state, and
-later-price observation contracts validated by EG-003. There is no pattern engine,
-scoring, ingestion orchestration, or persistence here. Keep context separate from
-later outcomes and implement one tested vertical slice at a time.
+Contains pure entry and swap-leg normalization, Solana identity validation,
+ambiguous-trade handling, immutable evidence/coverage state, strict pre-entry
+windows, historical-context coverage, later-price observations, and review-job state.
+There is no pattern engine or scoring. Framework, HTTP, and persistence concerns
+remain outside the domain package.

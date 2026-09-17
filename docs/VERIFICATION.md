@@ -1,12 +1,13 @@
 # Scaffold Verification Report
 
 **Prepared:** September 15, 2026  
-**Updated:** September 16, 2026  
-**Scope:** Entryglass 0.1.0 scaffold and offline provider-contract validator
+**Updated:** September 17, 2026
+**Scope:** Entryglass 0.1.0 through M4 complete local review and replay
 
 This report separates executed checks from unverified product behavior. It records
-the EG-001 local scaffold workflow, the offline validator, and the bounded private
-EG-003 feasibility spike. It does not certify a provider-backed product feature.
+the EG-001 local scaffold workflow, the offline validator, the bounded private EG-003
+feasibility spike, offline M2 ingestion, M3 temporal evidence, and the M4 browser
+journey. No M4 verification call contacted Nansen.
 
 ## EG-001 checks executed successfully
 
@@ -44,9 +45,9 @@ Vite production build. A dry run printed a redacted one-request plan. Attempting
 execution without a local `NANSEN_API_KEY` stopped before networking with a clear
 configuration error. No provider call was sent and no credit was consumed.
 
-The health contract and UI now describe Nansen integration as `validation_only`.
-This means a separate developer command exists; the browser still does not query
-Nansen or expose an analysis feature.
+At that stage, the health contract and UI described Nansen integration as
+`validation_only`. M2 later changed this to `private_ingestion_only`; the browser
+still does not query Nansen or expose an analysis feature.
 
 ## EG-003 private live validation
 
@@ -77,6 +78,64 @@ tests, 6 frontend tests, Ruff lint and formatting for 38 Python files, Vue/TypeS
 type checking, and the Vite production build. The two previously noted dependency
 deprecation warnings remain non-failing.
 
+## M2 ingestion and persistence checks
+
+On September 17, the complete `make check` passed with 53 backend tests, one explicitly
+opt-in live test skipped, 6 frontend tests, Ruff lint and formatting for 51 Python
+files, Vue/TypeScript type checking, and the Vite production build. The ordinary
+tests use synthetic rows and mock transports; they do not contact Nansen or consume
+credits.
+
+The M2 tests verify case-preserving 32-byte Solana address validation, Decimal and
+UTC normalization, direct and routed swaps, duplicate-leg removal, exclusion of exits
+and quote-only activity, and explicit ambiguity for multiple outputs. Typed provider
+tests cover pagination, redacted evidence, transient retry, bounded `Retry-After`,
+schema failure, timeouts through the configured HTTP transport, and credit metadata.
+
+SQLite tests apply the versioned migration to a temporary private database and verify
+paginated jobs, progress, immutable evidence, cached re-imports, idempotent entries,
+separate request/credit counters, explicit truncation, budget exhaustion, provider
+failure, no activity, non-entry activity, ambiguous activity, cancellation, and
+recoverable partial entries. A second import of the same scope made zero provider
+calls through the normalized-page cache and did not duplicate the entry.
+
+The real `make import-wallet` command was run in dry-run mode. It printed only hashed
+wallet/quote subjects and the declared window and budgets. It did not open SQLite,
+send a request, require a credential, or consume a credit. Live M2 execution was not
+performed because the existing EG-003 evidence already validated the row contract
+and ordinary development must not spend credits.
+
+## M3 context and outcome checks
+
+Offline typed-adapter tests verify the exact beta historical-flow route, inclusive
+upper-bound cutoff one second before the entry, preservation of observed zero versus
+null, warnings, request IDs, credit metadata, and explicit unavailable coverage. The
+OHLCV adapter uses the supported `date` field, rejects mismatched chain/token/timeframe
+responses, records truncation, and never feeds price rows into historical context.
+
+Application tests run the complete import/context/outcome workflow against synthetic
+providers and a temporary migrated SQLite database. They prove that changing only
+post-entry prices changes the outcome but cannot change the pre-entry context. They
+also verify separate 24-hour and 7-day observations, closed-candle selection, Decimal
+price changes, persisted evidence, and durable request/credit accounting.
+
+## M4 review and browser checks
+
+On September 17, the backend suite passed **62 tests** with one opt-in live test
+skipped. The frontend client suite passed **9 tests**. Ruff lint and formatting,
+Vue/TypeScript checking, and the Vite production build passed. Playwright ran three
+journeys in both desktop Chromium and Pixel 5 emulation (**6 browser tests**):
+
+- wallet scope to entry replay, with the later result absent before the reveal action;
+- explicit server-provider configuration failure without a fake review; and
+- a completed empty scope distinguished from an error or zero-signal result.
+
+The happy-path browser journey also verifies entry selection, context period and
+coverage, outcome reveal, evidence drawer contents, Escape-to-close behavior, and
+focusable controls. Manual browser inspection confirmed the running local health
+contract and responsive layout. All browser provider responses were test-only route
+interceptions; no credential was loaded and no provider credit was used.
+
 ## Environment used for EG-001
 
 - Host Python 3.14.4; the locked backend environment used Python 3.12.13
@@ -92,16 +151,21 @@ contract, but dependency updates should recheck them.
 
 ## Still not verified
 
-- Docker Compose schema validation, image builds, container startup, or reload.
-- A clean Git checkout or GitHub Actions execution. This extracted workspace has no
-  `.git` metadata, so the presence of the lockfiles is verified but their commit
-  status cannot be checked here.
+- Docker image builds, container startup, or reload. `docker compose config --quiet`
+  passed on September 17 with Docker 29.5.0 and Compose 5.1.0.
+- A clean-checkout or GitHub Actions execution. Both lockfiles are tracked in the
+  current Git repository, but CI was not run from this environment.
 - A non-empty historical who-bought/sold row and its live field types. The checked
   request returned an empty final page. Wider provider access and coverage remain
   unproven beyond the bounded sample. Publication of planned historical outputs
   still needs written provider clarification.
-- Any audit, replay, pattern engine, preflight result, database, or trading behavior;
-  these features remain deliberately unimplemented.
+- Live execution of the M2 multi-page import against Nansen. Its adapter is based on
+  the live-validated EG-003 wallet row envelope and is otherwise covered offline.
+- A live end-to-end M4 review against Nansen after these code changes. The earlier
+  bounded EG-003 spike validates the observed contracts, while the M4 execution path
+  is verified offline to avoid unapproved credit use.
+- Pattern engine, personal precedents, preflight, or trading behavior; these remain
+  deliberately unimplemented.
 
 ## Original archive preparation
 
@@ -111,7 +175,5 @@ checks. Registry access and Docker were unavailable in that environment, so the
 full installation and browser workflow were correctly left unverified until this
 EG-001 update.
 
-The next foundation checks are to commit both lockfiles in the real Git repository,
-then run `docker compose config` and start the Docker environment from a clean
-checkout. Provider results should not be interpreted until the authenticated
-validation tasks and EG-003 data-quality gate are complete.
+The remaining foundation check is to build and start the Docker environment from a
+clean checkout. The next product milestone is M5 personal precedents and preflight.

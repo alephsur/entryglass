@@ -1,5 +1,6 @@
 """Load local configuration without connecting to external services."""
 
+from pathlib import Path
 from typing import Literal
 
 from pydantic import AnyHttpUrl, Field, SecretStr
@@ -22,7 +23,13 @@ class Settings(BaseSettings):
         "http://localhost:5173",
         "http://127.0.0.1:5173",
     )
-    # Only the explicit validation command may use these server-side settings.
+    database_path: Path = Path("data/entryglass.sqlite3")
+    nansen_timeout_seconds: float = Field(default=20.0, gt=0)
+    nansen_max_concurrency: int = Field(default=1, ge=1, le=4)
+    review_max_entries: int = Field(default=5, ge=1, le=30)
+    review_max_requests: int = Field(default=15, ge=1, le=100)
+    review_max_credits: int = Field(default=32, ge=1, le=500)
+    # Only explicit server-side provider commands may use these settings.
     nansen_api_key: SecretStr | None = Field(
         default=None,
         validation_alias="NANSEN_API_KEY",

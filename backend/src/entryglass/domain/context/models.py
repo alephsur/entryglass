@@ -13,6 +13,13 @@ class ObservationState(StrEnum):
     UNAVAILABLE = "unavailable"
 
 
+class ContextCoverage(StrEnum):
+    """Overall availability of one strictly pre-entry context."""
+
+    OBSERVED = "observed"
+    UNAVAILABLE = "unavailable"
+
+
 @dataclass(frozen=True, slots=True)
 class PreEntryWindow:
     """A closed provider window that ends strictly before an entry."""
@@ -57,12 +64,22 @@ class HistoricalContext:
     smart_trader_avg_flow_usd: Decimal | None
     smart_trader_wallet_count: int | None
     warnings: tuple[str, ...] = ()
+    coverage: ContextCoverage = ContextCoverage.OBSERVED
 
     def __post_init__(self) -> None:
         if not self.entry_id.strip():
             raise ValueError("A context entry identifier is required.")
         if self.smart_trader_wallet_count is not None and self.smart_trader_wallet_count < 0:
             raise ValueError("A wallet count cannot be negative.")
+        values = (
+            self.smart_trader_net_flow_usd,
+            self.smart_trader_avg_flow_usd,
+            self.smart_trader_wallet_count,
+        )
+        if self.coverage is ContextCoverage.UNAVAILABLE and any(
+            value is not None for value in values
+        ):
+            raise ValueError("Unavailable context cannot contain observed segment values.")
 
     @property
     def net_flow_state(self) -> ObservationState:

@@ -1,1 +1,5 @@
-"""Reserved for SQLite persistence and evidence storage."""
+"""Private local storage adapters."""
+
+from entryglass.infrastructure.storage.sqlite import SqliteIngestionRepository
+
+__all__ = ["SqliteIngestionRepository"]

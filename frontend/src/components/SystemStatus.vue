@@ -25,13 +25,13 @@ onMounted(() => { void refresh() })
 </script>
 
 <template>
-  <section class="status-panel" aria-labelledby="system-title">
+  <section class="status-panel status-panel--compact" aria-labelledby="system-title">
     <div class="section-topline">
       <p class="eyebrow">Local environment</p>
       <span class="label">v0.1.0</span>
     </div>
-    <h2 id="system-title">A foundation, not a verdict.</h2>
-    <p class="muted">This screen checks the local API. It does not query Nansen or analyze a wallet.</p>
+    <h2 id="system-title">Local review service</h2>
+    <p class="muted">The health check spends no provider credits.</p>
     <div class="system-result" role="status" aria-live="polite" :aria-busy="busy">
       <template v-if="busy">Checking the local API...</template>
       <template v-else-if="health">
@@ -47,6 +47,6 @@ onMounted(() => { void refresh() })
     <button class="button" type="button" :disabled="busy" @click="refresh">
       {{ busy ? 'Checking...' : 'Check API connection' }}
     </button>
-    <p class="panel-note">Data integration: validation only. No API key required for this screen.</p>
+    <p class="panel-note">A review requires a server-side Nansen key. It is never sent to this browser.</p>
   </section>
 </template>

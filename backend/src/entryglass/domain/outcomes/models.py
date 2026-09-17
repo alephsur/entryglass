@@ -10,6 +10,10 @@ class OutcomeState(StrEnum):
     OBSERVED = "observed"
     MISSING_PRICE = "missing_price"
     PENDING = "pending"
+    UNSUPPORTED_COVERAGE = "unsupported_coverage"
+    TRUNCATED = "truncated"
+    PROVIDER_FAILURE = "provider_failure"
+    BUDGET_EXCEEDED = "budget_exceeded"
 
 
 class OutcomeHorizon(StrEnum):
@@ -49,7 +53,7 @@ class OutcomeObservation:
             if self.observed_price_usd < 0:
                 raise ValueError("An observed price cannot be negative.")
         elif any(value is not None for value in values):
-            raise ValueError("Pending or missing outcomes cannot contain observed values.")
+            raise ValueError("Unavailable outcomes cannot contain observed values.")
 
     @classmethod
     def from_price(
@@ -95,6 +99,31 @@ class OutcomeObservation:
             observed_at=observed_at,
             observed_price_usd=observed_price_usd,
             price_change_pct=change,
+        )
+
+    @classmethod
+    def unavailable(
+        cls,
+        *,
+        entry_id: str,
+        horizon: OutcomeHorizon,
+        entry_at: datetime,
+        state: OutcomeState,
+    ) -> "OutcomeObservation":
+        if state not in {
+            OutcomeState.MISSING_PRICE,
+            OutcomeState.UNSUPPORTED_COVERAGE,
+            OutcomeState.TRUNCATED,
+            OutcomeState.PROVIDER_FAILURE,
+            OutcomeState.BUDGET_EXCEEDED,
+        }:
+            raise ValueError("Unavailable outcomes require a missing coverage state.")
+        _require_utc(entry_at, "Entry")
+        return cls(
+            entry_id=entry_id,
+            horizon=horizon,
+            target_at=entry_at + horizon.duration,
+            state=state,
         )
 
 

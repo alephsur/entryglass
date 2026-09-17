@@ -1,4 +1,4 @@
-name: Scaffold checks
+name: Entryglass checks
 on:
   push:
   pull_request:
@@ -37,3 +37,5 @@ jobs:
         run: |
           if [ -f package-lock.json ]; then npm ci; else npm install; fi
       - run: npm run check
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e

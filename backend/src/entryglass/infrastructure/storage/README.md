@@ -1,5 +1,8 @@
 # Storage Adapter
 
-SQLite and private evidence storage are planned, not implemented. There are no
-models, migrations, database files, or connections in this scaffold. Add storage
-only after the provider-validation gate determines the necessary contracts.
+M2-M4 implement versioned SQLite migrations for import jobs, normalized entries,
+wallet/job associations, ambiguous transactions, immutable evidence metadata, and
+a freshness-bounded cache, review jobs, pre-entry context, outcomes, and review
+evidence. Database files are ignored by Git and created with owner-only permissions.
+They are private local storage, not encrypted storage. Pattern and preflight storage
+remain out of scope.

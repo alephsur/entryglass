@@ -3,20 +3,20 @@
     {
       "block_timestamp": "2026-01-01T12:00:00Z",
       "chain": "solana",
-      "token_bought_address": "SYNTHETIC_TOKEN",
+      "token_bought_address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "token_bought_age_days": 10,
       "token_bought_amount": 25,
       "token_bought_fdv": 1000000,
       "token_bought_market_cap": 500000,
       "token_bought_symbol": "SYN",
-      "token_sold_address": "SYNTHETIC_QUOTE",
+      "token_sold_address": "So11111111111111111111111111111111111111112",
       "token_sold_age_days": 1000,
       "token_sold_amount": 5,
       "token_sold_fdv": 100000000,
       "token_sold_market_cap": 90000000,
       "token_sold_symbol": "USDC",
       "trade_value_usd": 5,
-      "trader_address": "SYNTHETIC_WALLET",
+      "trader_address": "11111111111111111111111111111111",
       "trader_address_label": null,
       "transaction_hash": "SYNTHETIC_TRANSACTION"
     }

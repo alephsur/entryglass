@@ -1,34 +1,45 @@
-"""ASGI application entry point. Business features are intentionally absent."""
+"""ASGI entry point for the local-first review and replay application."""
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from entryglass import __version__
 from entryglass.api.routes.health import router as health_router
+from entryglass.api.routes.reviews import router as reviews_router
 from entryglass.core.config import Settings
+from entryglass.infrastructure.review_service import ReviewService
+from entryglass.infrastructure.storage import SqliteIngestionRepository
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
+def create_app(
+    settings: Settings | None = None,
+    *,
+    repository: SqliteIngestionRepository | None = None,
+    review_service: ReviewService | None = None,
+) -> FastAPI:
     """Build the application with injectable configuration for tests."""
     config = settings if settings is not None else Settings()
     application = FastAPI(
         title="Entryglass API",
         version=__version__,
         description=(
-            "Initial scaffold only. Historical audits, replay, patterns, and preflight "
-            "are planned, not implemented. HTTP requests do not query external data; "
-            "provider validation is a separate opt-in command."
+            "Local-first wallet-entry review with strictly pre-entry context, separately "
+            "revealed later price observations, and inspectable evidence."
         ),
     )
+    storage = repository or SqliteIngestionRepository(config.database_path)
     application.state.settings = config
+    application.state.review_repository = storage
+    application.state.review_service = review_service or ReviewService(config, storage)
     application.add_middleware(
         CORSMiddleware,
         allow_origins=list(config.cors_origins),
         allow_credentials=False,
-        allow_methods=["GET", "OPTIONS"],
+        allow_methods=["GET", "POST", "OPTIONS"],
         allow_headers=["Accept", "Content-Type"],
     )
     application.include_router(health_router, prefix="/api/v1")
+    application.include_router(reviews_router, prefix="/api/v1")
     return application
 
 

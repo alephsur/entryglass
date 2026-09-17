@@ -28,6 +28,11 @@ The validation command sends at most one request per invocation. It refuses live
 execution unless `--execute` is present and `--max-credits` covers the documented
 cost. It has no retry loop.
 
+The separate M2 wallet importer uses the already validated wallet-trade contract.
+It remains dry-run by default and additionally requires explicit request and credit
+ceilings. Transient retries cannot exceed either ceiling. Contract errors and
+permanent provider errors are not retried. See the root README for command usage.
+
 ## Checked routes and request shapes
 
 ### Wallet DEX trades

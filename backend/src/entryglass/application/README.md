@@ -1,5 +1,8 @@
 # Application Layer
 
-Contains the small provider-validation boundary required by M1. Import, replay,
-audit, preflight orchestration, jobs, and repository interfaces are not implemented.
-Add only the use cases required by the next validated roadmap milestone.
+Contains provider validation, budgeted wallet ingestion, and the M3/M4 review
+orchestration. The review use case imports economic entries, requests a strictly
+pre-entry context per entry, and computes separate reached/pending outcome horizons.
+It owns request/credit accounting and durable partial/failure transitions.
+
+Pattern and preflight orchestration remain unimplemented.

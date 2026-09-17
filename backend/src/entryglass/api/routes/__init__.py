@@ -1,1 +1,1 @@
-"""Implemented HTTP routes. Only health is available in this scaffold."""
+"""HTTP routes for process health and the local review journey."""

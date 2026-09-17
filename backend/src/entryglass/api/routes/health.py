@@ -11,13 +11,13 @@ router = APIRouter(tags=["system"])
 
 
 class HealthResponse(BaseModel):
-    """Describe the running scaffold without claiming analytics readiness."""
+    """Describe the running API without claiming analysis readiness."""
 
     status: Literal["ok"] = "ok"
     service: str = "Entryglass API"
     version: str = __version__
-    stage: Literal["scaffold"] = "scaffold"
-    nansen_integration: Literal["validation_only"] = "validation_only"
+    stage: Literal["review"] = "review"
+    nansen_integration: Literal["private_review"] = "private_review"
 
 
 @router.get("/health", response_model=HealthResponse)

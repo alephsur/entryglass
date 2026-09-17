@@ -1,9 +1,9 @@
 # Entryglass Roadmap
 
 **Baseline:** 2026-09-15  
-**Current state:** M1 live feasibility and EG-003 completed with explicit data limitations
+**Current state:** M4 complete review and replay journey completed
 
-**Next task:** Begin M2 normalized ingestion and private evidence persistence
+**Next task:** Begin M5 personal precedents and preflight
 
 **Delivery approach:** One developer, one chain, one complete user journey
 
@@ -46,7 +46,8 @@ training, graph infrastructure, or an LLM dependency to the critical path.
 
 ### M0 - Repository foundation
 
-**Status:** Structure and local toolchain verified; Git commit and Docker checks remain.
+**Status:** Structure, lockfiles, local toolchain, and Compose config verified;
+clean-checkout Docker startup remains.
 
 - [x] Create the Entryglass backend/frontend monorepo.
 - [x] Add FastAPI health, typed configuration, and a Vue development shell.
@@ -55,7 +56,7 @@ training, graph infrastructure, or an LLM dependency to the critical path.
 - [x] Provide architecture, methodology, integration notes, and this roadmap.
 - [x] Run 10 backend tests and 6 frontend HTTP-client tests in the available runtime.
 - [x] **EG-001:** Bootstrap on the owner's machine, run `make check`, and smoke-test the UI.
-- [ ] Commit `backend/uv.lock` and `frontend/package-lock.json` after verification.
+- [x] Commit `backend/uv.lock` and `frontend/package-lock.json` after verification.
 - [ ] Run `docker compose config` and start the Docker environment from a clean checkout.
 
 **Acceptance:** The shell correctly reports API availability, does not claim
@@ -94,22 +95,22 @@ do not relabel current cohorts as historical evidence.
 
 ### M2 - Ingestion, contracts, and evidence storage
 
-**Target:** September 16-18. **Priority:** P0. **Depends on:** M1 passing.
+**Status:** Completed September 17. **Priority:** P0. **Depends on:** M1 passing.
 
-- [ ] Define `TradeEntry`, `HistoricalContext`, `OutcomeObservation`,
+- [x] Define `TradeEntry`, `HistoricalContext`, `OutcomeObservation`,
       `EvidenceRecord`, and explicit coverage/error states.
-- [ ] Validate Solana addresses without modifying case and reject unsupported chains.
-- [ ] Implement paginated import with a request budget and explicit truncation.
-- [ ] Normalize decimals, UTC timestamps, quote assets, and token identities.
-- [ ] Group routed swaps and duplicate legs into economic entries where supported;
+- [x] Validate Solana addresses without modifying case and reject unsupported chains.
+- [x] Implement paginated import with a request budget and explicit truncation.
+- [x] Normalize decimals, UTC timestamps, quote assets, and token identities.
+- [x] Group routed swaps and duplicate legs into economic entries where supported;
       mark ambiguous cases instead of guessing or double-counting.
-- [ ] Exclude transfers, airdrops, and intermediate routing tokens from entry counts.
-- [ ] Add SQLite repositories and migrations only for the models now required.
-- [ ] Persist immutable evidence references, parameters, observation times,
+- [x] Exclude transfers, airdrops, and intermediate routing tokens from entry counts.
+- [x] Add SQLite repositories and migrations only for the models now required.
+- [x] Persist immutable evidence references, parameters, observation times,
       source/schema versions, and redacted response hashes.
-- [ ] Add bounded retries for transient failures, `Retry-After` handling, timeouts,
+- [x] Add bounded retries for transient failures, `Retry-After` handling, timeouts,
       concurrency limits, deduplication, and separate request/credit accounting.
-- [ ] Add a budgeted job flow with progress, cancellation, and a recoverable result.
+- [x] Add a budgeted job flow with progress, cancellation, and a recoverable result.
 
 **Acceptance:** Re-importing the same window does not duplicate entries. An
 incomplete page or provider error never appears as zero activity. No credentials
@@ -117,20 +118,21 @@ or raw labeled lists appear in logs or public fixtures.
 
 ### M3 - Historical context and separated outcomes
 
-**Target:** September 18-20. **Priority:** P0. **Depends on:** M2.
+**Status:** Completed September 17. **Priority:** P0. **Depends on:** M2.
 
-- [ ] Enforce a strictly pre-entry evidence boundary, including inclusive API bounds,
+- [x] Enforce a strictly pre-entry evidence boundary, including inclusive API bounds,
       bucket edges, timestamp precision, and same-transaction contamination.
-- [ ] Use temporal labels where supported and record reconstruction limitations.
-- [ ] Normalize segment direction and define which comparisons are valid.
-- [ ] Keep token-flow observations separate from verified DEX buy/sell evidence.
-- [ ] Where using buy/sell evidence, query both sides, deduplicate, and record
-      filters and pagination. Partial samples must be labeled as samples.
-- [ ] Preserve missing values, source warnings, incomplete buckets, and freshness.
-- [ ] Compute later price observations separately; never pass them into context rules.
-- [ ] Distinguish horizon pending, missing price, unsupported coverage, and an
+- [x] Use temporal labels where supported and record reconstruction limitations.
+- [x] Normalize segment direction and define which comparisons are valid.
+- [x] Keep token-flow observations separate from verified DEX buy/sell evidence.
+- [x] Keep buy/sell claims out of M3 because this path uses aggregate token flow
+      only. Any future buy/sell path must query both sides, deduplicate, and expose
+      filters, pagination, and partial-sample limits.
+- [x] Preserve missing values, source warnings, incomplete buckets, and freshness.
+- [x] Compute later price observations separately; never pass them into context rules.
+- [x] Distinguish horizon pending, missing price, unsupported coverage, and an
       observed zero return. Do not use an unfinished candle as a completed result.
-- [ ] Keep token-level provider PnL separate from per-entry outcomes; do not attribute
+- [x] Keep token-level provider PnL separate from per-entry outcomes; do not attribute
       a realized loss to an individual buy without an explicit lot-accounting method.
 
 **Acceptance:** Tests prove that adding or changing post-entry data cannot change
@@ -139,16 +141,16 @@ loss, or buying against the segment followed by a gain. They do not force a stor
 
 ### M4 - The complete review and replay journey
 
-**Target:** September 20-22. **Priority:** P0. **Depends on:** M3.
+**Status:** Completed September 17. **Priority:** P0. **Depends on:** M3.
 
-- [ ] Implement wallet input, visible scope, and progress without silent fake results.
-- [ ] Add entry list with coverage indicators and clear selection semantics.
-- [ ] Build a replay view that initially hides the later outcome.
-- [ ] Add an explicit reveal action for the subsequent price observation.
-- [ ] Add an evidence drawer with period, source, parameters, coverage, and rule version.
-- [ ] Handle empty wallets, invalid input, timeouts, low credits, partial analyses,
+- [x] Implement wallet input, visible scope, and progress without silent fake results.
+- [x] Add entry list with coverage indicators and clear selection semantics.
+- [x] Build a replay view that initially hides the later outcome.
+- [x] Add an explicit reveal action for the subsequent price observation.
+- [x] Add an evidence drawer with period, source, parameters, coverage, and rule version.
+- [x] Handle empty wallets, invalid input, timeouts, low credits, partial analyses,
       unavailable provider data, and expired cache entries.
-- [ ] Add keyboard navigation, focus states, responsive layout, and browser tests.
+- [x] Add keyboard navigation, focus states, responsive layout, and browser tests.
 
 **Acceptance:** A user can move from one public wallet to one understandable entry
 and inspect its evidence. Slow calls show progress, not a fabricated instant report.
@@ -237,18 +239,21 @@ accounting, better evaluation datasets, opt-in saved reports, privacy controls f
 hosted use, and a commercial permission review. An optional LLM may explain existing
 structured evidence, but must not create evidence or decide the verdict.
 
-## 7. First implementation handoff
+## 7. Current implementation handoff
 
-**EG-001, EG-002, and EG-003 are complete.** The validated sample required expanding
-beyond the planned 90-day scope: the authorized wallet contained no entries in 90
-days, two in one year, and three across documented Solana coverage. All three
-pre-entry contexts had observed zero Smart Trader net flow, unavailable average flow,
-and mixed 24-hour/7-day price directions. Treat this as a limited replay sample, not
-evidence of a predictive pattern. Begin M2 with the validated contracts:
+**EG-001, EG-002, EG-003, M2, M3, and M4 are complete.** The validated sample required
+expanding beyond the planned 90-day scope: the authorized wallet contained no entries
+in 90 days, two in one year, and three across documented Solana coverage. All three
+pre-entry contexts had observed zero Smart Trader net flow, unavailable average
+flow, and mixed 24-hour/7-day price directions. Treat this as a limited replay
+sample, not evidence of a predictive pattern.
 
-> Normalize the validated entry, context, and outcome contracts behind an ingestion
-> use case; add private persistence, explicit coverage states, deduplication, and a
-> request budget. Do not build scoring, claims about selling, or a pattern engine.
+The local application now provides typed, budgeted wallet ingestion, strictly
+pre-entry historical flow context, separate 24-hour and 7-day reference-price
+observations, durable job progress/cancellation, replay with hidden outcomes, and an
+evidence drawer. The ordinary and browser suites remain offline. Begin M5 with a
+small set of predeclared personal-precedent rules; do not add predictive scores,
+claims about selling, or trading execution.
 
 [S1]: https://nansen.ai/campaigns/meridian-buildathon
 [S7]: https://release.nansen.ai/help/articles/3540155-nansen-meridian-buildathon-sep-14-27

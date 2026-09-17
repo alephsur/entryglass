@@ -2,22 +2,28 @@
 
 ## Current implementation
 
-Entryglass is a small monorepo with one FastAPI process and one Vue development
-server. The browser calls `/api/v1/health` through the Vite `/api` proxy. The backend
-returns process liveness and explicitly reports that Nansen integration is limited
-to validation. A separate command can make one opt-in, credit-bounded provider call;
-it is not exposed over HTTP. There is no database connection or product API.
+Entryglass is a small local-first monorepo with one FastAPI process and one Vue
+development server. The browser creates and polls bounded review jobs through the
+Vite `/api` proxy. FastAPI runs the existing ingestion use case plus independent
+historical-context and later-price requests in a local background thread. SQLite is
+the source of truth for progress, cancellation, replay, and evidence.
 
 ```text
-Browser -> Vue shell -> Vite /api proxy -> FastAPI health route
+Browser -> Vue review -> Vite /api proxy -> FastAPI review routes
+                                      \-> durable review runner
+                                          -> wallet ingestion -> Nansen
+                                          -> pre-entry context -> Nansen
+                                          -> later prices -> Nansen
+                                          \-> private SQLite
 Developer -> opt-in validation command -> Nansen API
+Developer -> opt-in import command -> ingestion use case -> Nansen / SQLite
 ```
 
-The only extra HTTP surfaces are FastAPI's generated API documentation. A health
-response does not verify API credits, provider availability, database access, or
-historical-data coverage. These must not be inferred from a green status indicator.
+A health response still does not verify credits, provider availability, database
+coverage, or a wallet result. Starting a review is the explicit credit-consuming
+action and requires the server-side key. Reads never expose the key or raw payloads.
 
-## Planned modular structure
+## Modular structure
 
 ```text
 HTTP routes
@@ -30,32 +36,30 @@ HTTP routes
 
 | Directory | Responsibility | Current state |
 | --- | --- | --- |
-| `api/` | HTTP contracts and request/response mapping | Health only |
+| `api/` | Job, replay, explicit outcome reveal, evidence, and health contracts | M4 implemented |
 | `core/` | Typed server configuration | Implemented |
-| `domain/trades/` | Economic entry contract; routing normalization and coverage | Entry contract only |
-| `domain/context/` | Strict pre-entry windows and nullable observations | Contracts implemented |
-| `domain/outcomes/` | Later price observations, explicitly not realized PnL | Contracts implemented |
+| `domain/trades/` | Economic entry contract, Solana validation, routing normalization | Implemented for wallet entries |
+| `domain/evidence/` | Coverage, evidence, and import-job state | Implemented for M2 |
+| `domain/context/` | Strict pre-entry windows, coverage, and nullable observations | M3 implemented |
+| `domain/outcomes/` | Separate later reference prices, explicitly not realized PnL | M3 implemented |
+| `domain/reviews/` | Durable review job and stage state | M4 implemented |
 | `domain/patterns/` | Transparent rule matches and evaluation | Reserved |
 | `domain/preflight/` | Comparison with historical precedents | Reserved |
-| `application/` | Provider-validation port; future import, audit, replay, and preflight orchestration | Validation port only |
-| `infrastructure/nansen/` | Checked request DTOs, one-call HTTP validator, redacted metadata | Validation only |
-| `infrastructure/storage/` | Evidence and analysis persistence | Reserved |
+| `application/` | Validation, ingestion, context/outcome, and review orchestration | M1-M4 implemented |
+| `infrastructure/nansen/` | Typed wallet, historical-flow, and OHLCV adapters | M1-M3 implemented |
+| `infrastructure/storage/` | Import/review jobs, replay data, evidence, and page cache | M2-M4 implemented |
 
 Domain code must not import FastAPI, database drivers, or the HTTP client. Provider
 responses must be normalized at the boundary, preserving nulls, warnings, source
 times, and pagination limits. Do not spread vendor field names across the UI.
 
-## Future contracts, not implemented endpoints
+## Implemented HTTP boundary
 
-After the validation gate, consider an analysis job resource, paginated entry reads,
-one-entry evidence retrieval, and a preflight request. Define their schemas only
-once the real data shape is known. Do not add endpoints returning successful fake
-reports while the domain is empty.
-
-Each analysis should have a stable identifier, immutable methodology version, input
-scope, evidence references, progress, and an explicit complete/partial/failed state.
-Use simple bounded background work and polling if necessary. Do not rely on an
-in-memory job as durable storage, and do not add Celery or Redis preemptively.
+`POST /api/v1/reviews` returns a durable job immediately. Polling, cancellation,
+entry listing, one-entry replay, outcome reveal, and evidence reads map persisted
+state without in-memory-only results. Creation fails explicitly when the provider is
+not configured. Empty, partial, failed, and cancelled jobs remain distinct. No task
+queue, Redis service, auth layer, scoring engine, or fake successful report was added.
 
 ## Data separation
 
@@ -64,7 +68,7 @@ is a different object with a later horizon. A report may join both for display,
 but the pattern rule's feature input must not include the outcome being assessed.
 A UI reveal action controls presentation, not the underlying temporal guarantee.
 
-Evidence files should remain private. Store normalized derived values and hashes
+Evidence files and SQLite databases should remain private. Store normalized derived values and hashes
 where sufficient; validate provider retention and redistribution terms before
 preserving raw responses. Decide deletion and retention policies before hosting.
 
@@ -75,5 +79,6 @@ constitute a production architecture. Public hosting needs authentication or acc
 controls for paid analysis, request budgets, rate limiting, appropriate CORS, TLS,
 privacy and retention decisions, a compiled frontend, and locked dependencies.
 
-SQLite is a planned choice, not a running service in this scaffold. Add it only
-when the first validated ingestion and evidence models exist.
+SQLite is a local adapter, not a network service. The database is owner-readable and
+ignored by Git, but it is not encrypted. Public hosting still requires an explicit
+retention, deletion, backup, and access-control decision.

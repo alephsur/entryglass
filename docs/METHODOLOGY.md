@@ -1,8 +1,8 @@
 # Methodology Contract
 
-These are design requirements for future implementation, not algorithms currently
-present in the scaffold. Their purpose is to make every conclusion no stronger
-than its evidence.
+These requirements govern implemented ingestion contracts and future context,
+outcome, interpretation, and presentation work. Their purpose is to make every
+conclusion no stronger than its evidence.
 
 ## 1. Three independent layers
 
@@ -90,3 +90,12 @@ an investment outcome. Any optional LLM is only a presentation layer over existi
 validated structured facts.
 
 Source references resolve in [SOURCES.md](SOURCES.md).
+
+## 9. Implemented M3/M4 boundary
+
+The review pipeline ends the historical-flow query one second before the entry,
+stores its values and coverage in `HistoricalContext`, and runs OHLCV retrieval only
+after that object exists. The browser receives no later price values from the replay
+endpoint; it must call the separate outcome endpoint after an explicit reveal action.
+This presentation boundary complements, but does not replace, the tested temporal
+separation in the application and domain layers.

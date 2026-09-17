@@ -1,1 +1,1 @@
-"""Application boundaries; product orchestration remains unimplemented."""
+"""Application use cases for validation, ingestion, and historical review."""

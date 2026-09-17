@@ -20,6 +20,8 @@ htmlcov/
 node_modules/
 dist/
 coverage/
+test-results/
+playwright-report/
 *.tsbuildinfo
 
 # Private data and local artifacts

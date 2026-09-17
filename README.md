@@ -2,17 +2,17 @@
 
 **Look back. Enter with context.**
 
-Entryglass is a planned research tool for reviewing a wallet's DEX entries against
+Entryglass is a research tool under development for reviewing a wallet's DEX entries against
 historical market context, then comparing a possible new entry with those precedents.
 The name combines an entry with a lens for examining it. It is a working project
 name, not a claim of trademark or domain availability.
 
-> **Release 0.1.0 is an initial scaffold, not the product.**
-> Only the API health endpoint, a development landing screen, and an opt-in provider
-> contract-validation command are implemented. No wallet audit, historical
-> calculation, pattern engine, database, trading operation, or simulated investment
-> result is implemented. A private, bounded EG-003 validation spike has been run;
-> its evidence is not part of the repository or exposed by the application.
+> **Release 0.1.0 implements the review and replay journey through M4.**
+> A local user can review a bounded public-wallet scope, inspect strictly pre-entry
+> historical flow context, explicitly reveal separate later price observations, and
+> inspect evidence metadata. Personal pattern evaluation, preflight comparison,
+> trading, and simulated investment results are not implemented. Provider evidence
+> remains private to the local application.
 
 ## Start here
 
@@ -29,12 +29,12 @@ All authored documentation, source comments, and interface copy are in English.
 
 | Area | Current contents |
 | --- | --- |
-| Backend | FastAPI app factory, typed settings, health route, CORS, provider-validation contracts |
-| Frontend | Vue 3 + TypeScript + Vite shell, local API status, 6 HTTP-client tests |
-| Domain | Validated entry, pre-entry window, and outcome contracts; patterns and preflight remain reserved |
-| Infrastructure | Opt-in Nansen contract validator; SQLite remains reserved |
+| Backend | FastAPI review jobs, replay/outcome/evidence reads, typed settings and health |
+| Frontend | Vue review journey with progress, coverage, hidden outcomes and evidence drawer |
+| Domain | Entry normalization, strict pre-entry context, separated outcomes and job states |
+| Infrastructure | Bounded Nansen adapters, durable SQLite jobs, private cache and evidence |
 | Development | Locked local setup, Make commands, safe setup script, development Docker configuration |
-| Quality | pytest, Ruff configuration, TypeScript checks, Node test runner, CI workflow |
+| Quality | 62 backend tests, 9 frontend tests, 6 Chromium journeys, static checks and build |
 | Planning | Roadmap, architecture, methodology, integration notes, agent instructions |
 
 ## Option A: local development
@@ -70,6 +70,12 @@ make dev-web
 Open `http://localhost:5173`. API documentation is at `http://localhost:8000/docs`.
 The health endpoint is `http://localhost:8000/api/v1/health`.
 
+Without `NANSEN_API_KEY`, the interface and health check still load, but starting a
+review returns an explicit configuration message and spends no credits. To test a
+live review, set the key only in the root `.env`, restart the backend, paste a public
+Solana wallet, review the visible date range and entry limit, and select **Review
+wallet**. The default server ceiling is 5 entries, 15 requests, and 32 credits.
+
 **Do not open `frontend/index.html` using `file://`.** This is a Vite project and
 must be served through its development server. Browser API requests use `/api`
 and the Vite proxy forwards them to the backend.
@@ -103,20 +109,21 @@ available in the archive-generation environment; see the verification report.
 docker compose down
 ```
 
-## Check the scaffold
+## Check the workspace
 
 After local setup:
 
 ```bash
 make test
 make check
+make browser-test
 ```
 
 `make check` runs tests, Python lint and formatting checks, frontend type checking,
-and the frontend production build. It does not contact Nansen. Frontend tests use
-Node's built-in test runner; no browser or test framework package is required for
-the current API-client tests. The Vue shell has also been smoke-tested against a
-running backend and with the backend unavailable; see `docs/VERIFICATION.md`.
+and the frontend production build. `make browser-test` runs the happy path plus
+provider-configuration and empty-scope paths in desktop and mobile Chromium. These
+checks use synthetic intercepted responses, do not contact Nansen, and never spend
+credits. See `docs/VERIFICATION.md`.
 
 To format Python files:
 
@@ -124,17 +131,36 @@ To format Python files:
 make format
 ```
 
-The provider validator is offline by default and prints a redacted request plan.
+The provider validator and wallet importer are offline by default and print redacted plans.
 Live execution additionally requires `--execute`, an explicit credit ceiling, a
 server-side key, and owner-approved public inputs. See
 [docs/PROVIDER_VALIDATION.md](docs/PROVIDER_VALIDATION.md).
+
+The M2 importer requires explicit wallet scope, quote identities, and request/credit
+ceilings. This dry run creates no database and sends no request:
+
+```bash
+make import-wallet ARGS='run \
+  --address PUBLIC_SOLANA_WALLET \
+  --from 2026-06-01T00:00:00Z \
+  --to 2026-06-30T00:00:00Z \
+  --quote SOLANA_QUOTE_MINT=SYMBOL \
+  --max-requests 5 --max-credits 5'
+```
+
+Add `--execute` only after reviewing the plan. Results go to the ignored private
+SQLite path configured by `ENTRYGLASS_DATABASE_PATH`. On execution the command emits
+the job ID immediately; the `status` and `cancel` subcommands accept that ID while
+the import is running. The same bounded ingestion path is used by a review started
+in the browser when the server-side key is configured.
 
 ## Dependency reproducibility
 
 `backend/uv.lock` and `frontend/package-lock.json` are present. On September 16,
 2026, `make setup` successfully used `uv sync --locked` and `npm ci`, and the full
-`make check` completed. Commit both lockfiles when this source tree is placed in its
-Git repository; this extracted workspace does not include Git metadata.
+`make check` completed. Both lockfiles are tracked in the Git repository. M4 adds
+Playwright as a locked development dependency for offline desktop/mobile browser
+journeys; backend runtime dependencies remain unchanged.
 
 The declared version ranges remain the compatibility policy, and future dependency
 updates still require a fresh verification run. The backend Docker scaffold installs
@@ -154,10 +180,10 @@ entryglass/
   backend/
     pyproject.toml
     src/entryglass/
-      api/routes/health.py
+      api/routes/{health,reviews}.py
       core/config.py
-      domain/{trades,context,outcomes,patterns,preflight}/
-      application/
+      domain/{trades,evidence,context,outcomes,reviews,patterns,preflight}/
+      application/{provider,ingestion,reviews}.py
       infrastructure/{nansen,storage}/
     tests/{api,unit,integration}/
   frontend/
@@ -183,22 +209,24 @@ reserved modules from implemented code.
 ## Configuration and privacy
 
 Copy `.env.example` to `.env` at the repository root. `NANSEN_API_KEY` is used only
-by explicit backend validation commands. Never put it in `frontend/`, a `VITE_`
+by explicit backend validation/import commands. Never put it in `frontend/`, a `VITE_`
 environment variable, logs, screenshots, or the public repository.
 The frontend container does not receive the backend `.env` file.
 
 `data/` and `artifacts/` are private local workspaces, excluded from Git except for
 their README files. They are not encrypted storage. No telemetry or third-party
 analytics is installed. No wallet signature, seed phrase, or private key is needed.
+The SQLite repository creates its database with owner-only permissions, but users
+must still protect backups and the surrounding filesystem.
 
 ## Product boundaries
 
-The planned product will distinguish transfers from verified trades, historical
-context from future outcomes, and price changes from realized PnL. It will display
+The implemented review distinguishes transfers from verified trades, historical
+context from future outcomes, and price changes from realized PnL. It displays
 coverage and missing-data states rather than inventing a reassuring score.
 See [docs/METHODOLOGY.md](docs/METHODOLOGY.md).
 
-Do not represent this scaffold as an investment recommendation service or an
+Do not represent this incomplete product as an investment recommendation service or an
 operational contest submission. Public-source review did not establish redistribution
 permission for the planned historical endpoints, so written provider clarification
 is still required before publishing their outputs. Also select a repository license
